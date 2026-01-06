@@ -47,9 +47,14 @@
   <!-- コーティングタブ -->
   <div id="tab-coating" class="tab-content">
 
+<!-- 折りたたみ式 料金表 -->
 <div class="form-block notice-block">
-  <p class="notice-title">セット割引の料金体系が自動反映されます</p>
-  <ul class="price-rules">
+  <div class="accordion-header" onclick="togglePriceRules()">
+    <span>セット割引の料金体系が自動反映されます</span>
+    <span id="accordion-icon">▼</span>
+  </div>
+
+  <ul id="price-rules" class="price-rules hidden">
     <li>1台：3,300円</li>
     <li>2台：5,800円</li>
     <li>3台：8,000円</li>
@@ -58,6 +63,7 @@
     <li>学生・シニア：1台 2,000円（片面/両面問わず）</li>
   </ul>
 </div>
+
 
 
     <div class="form-block">

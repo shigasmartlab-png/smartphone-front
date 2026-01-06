@@ -226,3 +226,18 @@ function calcCoating() {
     <p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>
   `;
 }
+
+function togglePriceRules() {
+  const rules = document.getElementById("price-rules");
+  const icon = document.getElementById("accordion-icon");
+
+  const isHidden = rules.classList.contains("hidden");
+
+  if (isHidden) {
+    rules.classList.remove("hidden");
+    icon.style.transform = "rotate(180deg)";
+  } else {
+    rules.classList.add("hidden");
+    icon.style.transform = "rotate(0deg)";
+  }
+}
