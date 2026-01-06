@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>スマホ修理 見積もりシミュレーター（統合版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>スマホ修理 見積もりシミュレーター</h1>
+
+  <!-- OS 切り替え -->
+  <div id="os-switch">
+    <button id="btn-iphone" class="os-btn active">iPhone</button>
+    <button id="btn-android" class="os-btn">Android</button>
+  </div>
+
+  <div class="form-block">
+    <label>機種</label>
+    <select id="model"></select>
+  </div>
+
+  <div class="form-block">
+    <label>故障内容</label>
+    <select id="repair_type"></select>
+  </div>
+
+  <div class="form-block">
+    <label>オプション</label>
+    <div id="options-area"></div>
+  </div>
+
+  <button onclick="estimate()" class="estimate-btn">見積もりを計算</button>
+
+  <div id="result"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
