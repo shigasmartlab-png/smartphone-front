@@ -196,7 +196,7 @@ function calcCoating() {
 
   let base = 0;
 
-  // ★ 学生・シニアは 1台あたり 2,000円固定
+  // 学生・シニアは 1台あたり 2,000円固定（片面/両面関係なし）
   if (person === "student" || person === "senior") {
     base = count * 2000;
   } else {
