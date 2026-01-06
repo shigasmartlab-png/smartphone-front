@@ -194,21 +194,25 @@ function calcCoating() {
     return;
   }
 
-  let base = 0;
+  let total = 0;
+  let unit = 0;
 
   // 学生・シニアは 1台あたり 2,000円固定（片面/両面関係なし）
   if (person === "student" || person === "senior") {
-    base = count * 2000;
+    unit = 2000;
+    total = count * unit;
   } else {
     // 通常料金
-    if (count === 1) base = 3300;
-    else if (count === 2) base = 5800;
-    else if (count === 3) base = 8000;
-    else if (count >= 4 && count < 10) base = count * 2500;
-    else if (count >= 10) base = count * 2200;
+    if (count === 1) total = 3300;
+    else if (count === 2) total = 5800;
+    else if (count === 3) total = 8000;
+    else if (count >= 4 && count < 10) total = count * 2500;
+    else if (count >= 10) total = count * 2200;
 
     // 両面は2倍
-    if (type === "double") base *= 2;
+    if (type === "double") total *= 2;
+
+    unit = Math.round(total / count);
   }
 
   area.innerHTML = `
@@ -218,6 +222,7 @@ function calcCoating() {
     <p><strong>対象者:</strong> ${
       person === "normal" ? "一般" : person === "student" ? "学生" : "シニア"
     }</p>
-    <p><strong>合計:</strong> ¥${base.toLocaleString()}</p>
+    <p><strong>1台あたり:</strong> ¥${unit.toLocaleString()}</p>
+    <p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>
   `;
 }
