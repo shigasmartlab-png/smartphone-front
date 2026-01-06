@@ -181,11 +181,12 @@ async function estimate() {
 }
 
 /* =========================
-   コーティング料金（片面 / 両面）
+   コーティング料金（片面 / 両面 / 学生・シニア）
 ========================= */
 function calcCoating() {
   const count = Number(document.getElementById("coat-count").value);
   const type = document.getElementById("coat-type").value;
+  const person = document.getElementById("coat-person").value;
   const area = document.getElementById("coat-result");
 
   if (count <= 0) {
@@ -195,18 +196,28 @@ function calcCoating() {
 
   let base = 0;
 
-  if (count === 1) base = 3300;
-  else if (count === 2) base = 5800;
-  else if (count === 3) base = 8000;
-  else if (count >= 4 && count < 10) base = count * 2500;
-  else if (count >= 10) base = count * 2200;
+  // ★ 学生・シニアは 1台あたり 2,000円固定
+  if (person === "student" || person === "senior") {
+    base = count * 2000;
+  } else {
+    // 通常料金
+    if (count === 1) base = 3300;
+    else if (count === 2) base = 5800;
+    else if (count === 3) base = 8000;
+    else if (count >= 4 && count < 10) base = count * 2500;
+    else if (count >= 10) base = count * 2200;
 
-  if (type === "double") base *= 2;
+    // 両面は2倍
+    if (type === "double") base *= 2;
+  }
 
   area.innerHTML = `
     <h2>コーティング料金</h2>
     <p><strong>台数:</strong> ${count}台</p>
     <p><strong>タイプ:</strong> ${type === "single" ? "片面" : "両面"}</p>
+    <p><strong>対象者:</strong> ${
+      person === "normal" ? "一般" : person === "student" ? "学生" : "シニア"
+    }</p>
     <p><strong>合計:</strong> ¥${base.toLocaleString()}</p>
   `;
 }

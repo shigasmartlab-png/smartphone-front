@@ -12,6 +12,7 @@ h1 {
   font-size: 1.4rem;
 }
 
+/* メインタブ */
 #main-tabs {
   display: flex;
   justify-content: center;
@@ -35,6 +36,7 @@ h1 {
   border-color: #28a745;
 }
 
+/* タブコンテンツ */
 .tab-content {
   display: none;
 }
@@ -43,6 +45,7 @@ h1 {
   display: block;
 }
 
+/* カード風ブロック */
 .form-block,
 #result,
 #coat-result {
@@ -69,6 +72,7 @@ select,
   box-sizing: border-box;
 }
 
+/* OS 切り替え */
 #os-switch {
   display: flex;
   justify-content: center;
@@ -92,6 +96,7 @@ select,
   border-color: #007bff;
 }
 
+/* 見積もりボタン */
 .estimate-btn {
   width: 100%;
   padding: 14px;
@@ -104,6 +109,7 @@ select,
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
+/* オプション */
 .option-item {
   margin-bottom: 6px;
   font-size: 0.9rem;
@@ -114,6 +120,7 @@ select,
   margin-right: 6px;
 }
 
+/* 結果 */
 #result h2,
 #coat-result h2 {
   margin-top: 0;
@@ -126,6 +133,7 @@ select,
   font-size: 0.9rem;
 }
 
+/* スマホ向け */
 @media (max-width: 480px) {
   body {
     padding: 12px;
@@ -136,6 +144,7 @@ select,
   }
 }
 
+/* タブレット〜PC */
 @media (min-width: 768px) {
   body {
     max-width: 640px;
