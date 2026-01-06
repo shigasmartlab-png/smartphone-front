@@ -17,7 +17,7 @@ document.querySelectorAll(".main-tab").forEach(btn => {
    OS 切り替え
 ========================= */
 const API_URLS = {
-  iphone: "https://iphone-estimate-api.onrender.com",
+  iphone: "https://estimate-api-6j8x.onrender.com",
   android: "https://android-estimate-api.onrender.com"
 };
 
