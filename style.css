@@ -156,3 +156,29 @@ select,
     font-size: 1.6rem;
   }
 }
+
+.notice-block {
+  background: #fff8e1;
+  border-left: 4px solid #ffb300;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.notice-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+  color: #b36b00;
+}
+
+.price-rules {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.price-rules li {
+  margin-bottom: 4px;
+}
+
