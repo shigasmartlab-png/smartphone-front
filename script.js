@@ -14,10 +14,13 @@ document.querySelectorAll(".main-tab").forEach(btn => {
 });
 
 /* =========================
-   OS 切り替え
+   API ベース URL（統合版）
 ========================= */
 const API_BASE = "https://estimate-api-6j8x.onrender.com";
 
+/* =========================
+   OS 切り替え
+========================= */
 let currentOS = "iPhone";
 
 document.getElementById("btn-iphone").onclick = () => switchOS("iPhone");
@@ -86,7 +89,7 @@ async function loadRepairs() {
     });
   });
 
-  // 修理内容セレクトを作成
+  // 修理内容セレクト
   Object.keys(grouped).forEach(name => {
     const opt = document.createElement("option");
     opt.value = name;
@@ -193,4 +196,63 @@ async function estimate() {
   html += `<p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>`;
 
   resultArea.innerHTML = html;
+}
+
+/* =========================
+   コーティング料金（既存のまま）
+========================= */
+function calcCoating() {
+  const count = Number(document.getElementById("coat-count").value);
+  const type = document.getElementById("coat-type").value;
+  const person = document.getElementById("coat-person").value;
+  const area = document.getElementById("coat-result");
+
+  if (count <= 0) {
+    area.innerHTML = `<p>1台以上を入力してください。</p>`;
+    return;
+  }
+
+  let total = 0;
+  let unit = 0;
+
+  if (person === "student" || person === "senior") {
+    unit = 2000;
+    total = count * unit;
+  } else {
+    if (count === 1) total = 3300;
+    else if (count === 2) total = 5800;
+    else if (count === 3) total = 8000;
+    else if (count >= 4 && count < 10) total = count * 2500;
+    else if (count >= 10) total = count * 2200;
+
+    if (type === "double") total *= 2;
+
+    unit = Math.round(total / count);
+  }
+
+  area.innerHTML = `
+    <h2>コーティング料金</h2>
+    <p><strong>台数:</strong> ${count}台</p>
+    <p><strong>タイプ:</strong> ${type === "single" ? "片面" : "両面"}</p>
+    <p><strong>対象者:</strong> ${
+      person === "normal" ? "一般" : person === "student" ? "学生" : "シニア"
+    }</p>
+    <p><strong>1台あたり:</strong> ¥${unit.toLocaleString()}</p>
+    <p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>
+  `;
+}
+
+function togglePriceRules() {
+  const rules = document.getElementById("price-rules");
+  const icon = document.getElementById("accordion-icon");
+
+  const isHidden = rules.classList.contains("hidden");
+
+  if (isHidden) {
+    rules.classList.remove("hidden");
+    icon.style.transform = "rotate(180deg)";
+  } else {
+    rules.classList.add("hidden");
+    icon.style.transform = "rotate(0deg)";
+  }
 }
