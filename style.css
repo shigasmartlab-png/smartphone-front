@@ -75,6 +75,14 @@ select,
   background: #fafafa;
 }
 
+/* 品質ランク説明文 */
+.quality-desc {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
+}
+
 /* OS 切り替え */
 #os-switch {
   display: flex;

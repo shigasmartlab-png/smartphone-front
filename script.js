@@ -19,6 +19,16 @@ document.querySelectorAll(".main-tab").forEach(btn => {
 const API_BASE = "https://estimate-api-6j8x.onrender.com";
 
 /* =========================
+   品質ランク説明文
+========================= */
+const QUALITY_DESCRIPTIONS = {
+  "互換品（LCD）": "純正ではない液晶パネル。価格が安いが、発色や明るさは純正より劣る場合があります。",
+  "互換品（OLED）": "純正ではないOLEDパネル。純正に近い発色でコスパが良いタイプ。",
+  "再生品（純正同等）": "純正パネルを再利用した高品質パネル。純正とほぼ同等の表示品質。",
+  "標準": "バッテリー交換などで使用する標準品質のパーツです。"
+};
+
+/* =========================
    OS 切り替え
 ========================= */
 let currentOS = "iPhone";
@@ -120,6 +130,21 @@ function updateQuality(grouped) {
 
     qualitySelect.appendChild(opt);
   });
+
+  // ★ 品質ランク説明文を更新
+  updateQualityDescription();
+
+  // ★ 品質ランク変更時にも説明文を更新
+  qualitySelect.onchange = updateQualityDescription;
+}
+
+/* =========================
+   品質ランク説明文の更新
+========================= */
+function updateQualityDescription() {
+  const q = document.getElementById("quality").value;
+  const desc = QUALITY_DESCRIPTIONS[q] || "";
+  document.getElementById("quality-description").textContent = desc;
 }
 
 /* =========================
