@@ -16,23 +16,18 @@ document.querySelectorAll(".main-tab").forEach(btn => {
 /* =========================
    OS 切り替え
 ========================= */
-const API_URLS = {
-  iphone: "https://estimate-api-6j8x.onrender.com",
-  android: "https://android-estimate-api.onrender.com"
-};
+const API_BASE = "https://estimate-api-6j8x.onrender.com";
 
-let currentOS = "iphone";
-let API_BASE = API_URLS[currentOS];
+let currentOS = "iPhone";
 
-document.getElementById("btn-iphone").onclick = () => switchOS("iphone");
-document.getElementById("btn-android").onclick = () => switchOS("android");
+document.getElementById("btn-iphone").onclick = () => switchOS("iPhone");
+document.getElementById("btn-android").onclick = () => switchOS("Android");
 
 function switchOS(os) {
   currentOS = os;
-  API_BASE = API_URLS[os];
 
-  document.getElementById("btn-iphone").classList.toggle("active", os === "iphone");
-  document.getElementById("btn-android").classList.toggle("active", os === "android");
+  document.getElementById("btn-iphone").classList.toggle("active", os === "iPhone");
+  document.getElementById("btn-android").classList.toggle("active", os === "Android");
 
   loadModels();
   loadOptions();
@@ -50,13 +45,13 @@ window.onload = async () => {
    機種一覧
 ========================= */
 async function loadModels() {
-  const res = await fetch(`${API_BASE}/models`);
+  const res = await fetch(`${API_BASE}/models?os=${encodeURIComponent(currentOS)}`);
   const data = await res.json();
 
   const modelSelect = document.getElementById("model");
   modelSelect.innerHTML = "";
 
-  data.models.forEach(m => {
+  (data.models || []).forEach(m => {
     const opt = document.createElement("option");
     opt.value = m;
     opt.textContent = m;
@@ -68,7 +63,7 @@ async function loadModels() {
 }
 
 /* =========================
-   故障内容一覧
+   故障内容 + 品質ランク
 ========================= */
 async function loadRepairs() {
   const model = document.getElementById("model").value;
@@ -77,29 +72,51 @@ async function loadRepairs() {
   const data = await res.json();
 
   const repairSelect = document.getElementById("repair_type");
+  const qualitySelect = document.getElementById("quality");
   repairSelect.innerHTML = "";
+  qualitySelect.innerHTML = "";
 
-  let availableCount = 0;
+  // 修理内容ごとに品質ランクをグループ化
+  const grouped = {};
+  (data.repairs || []).forEach(r => {
+    if (!grouped[r.name]) grouped[r.name] = [];
+    grouped[r.name].push({
+      quality: r.quality,
+      status: r.status
+    });
+  });
 
-  data.repairs.forEach(r => {
+  // 修理内容セレクトを作成
+  Object.keys(grouped).forEach(name => {
     const opt = document.createElement("option");
-    opt.value = r.name;
-
-    if (r.status === "available") {
-      opt.textContent = r.name;
-      availableCount++;
-    } else if (r.status === "soldout") {
-      opt.textContent = `${r.name}（SOLD OUT）`;
-      opt.disabled = true;
-    } else if (r.status === "unsupported") {
-      opt.textContent = `${r.name}（未対応）`;
-      opt.disabled = true;
-    }
-
+    opt.value = name;
+    opt.textContent = name;
     repairSelect.appendChild(opt);
   });
 
-  repairSelect.disabled = availableCount === 0;
+  // 修理内容変更時に品質ランクを更新
+  repairSelect.onchange = () => updateQuality(grouped);
+  updateQuality(grouped);
+}
+
+function updateQuality(grouped) {
+  const repair = document.getElementById("repair_type").value;
+  const qualitySelect = document.getElementById("quality");
+  qualitySelect.innerHTML = "";
+
+  grouped[repair].forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.quality;
+
+    if (item.status === "available") {
+      opt.textContent = item.quality;
+    } else {
+      opt.textContent = `${item.quality}（未対応）`;
+      opt.disabled = true;
+    }
+
+    qualitySelect.appendChild(opt);
+  });
 }
 
 /* =========================
@@ -112,7 +129,7 @@ async function loadOptions() {
   const area = document.getElementById("options-area");
   area.innerHTML = "";
 
-  data.options.forEach(opt => {
+  (data.options || []).forEach(opt => {
     const div = document.createElement("div");
     div.className = "option-item";
 
@@ -133,12 +150,17 @@ async function loadOptions() {
 async function estimate() {
   const model = document.getElementById("model").value;
   const repair = document.getElementById("repair_type").value;
+  const quality = document.getElementById("quality").value;
 
   const selectedOptions = [...document.querySelectorAll("#options-area input:checked")]
     .map(c => c.value)
     .join(",");
 
-  const url = `${API_BASE}/estimate?model=${encodeURIComponent(model)}&repair_type=${encodeURIComponent(repair)}&options=${encodeURIComponent(selectedOptions)}`;
+  const url =
+    `${API_BASE}/estimate?model=${encodeURIComponent(model)}` +
+    `&repair_type=${encodeURIComponent(repair)}` +
+    `&quality=${encodeURIComponent(quality)}` +
+    `&options=${encodeURIComponent(selectedOptions)}`;
 
   const res = await fetch(url);
   const data = await res.json();
@@ -146,15 +168,7 @@ async function estimate() {
   const resultArea = document.getElementById("result");
 
   if (data.error) {
-    if (data.error === "未対応") {
-      resultArea.innerHTML = `<h2>見積もり結果</h2><p>この修理は未対応です。</p>`;
-      return;
-    }
-    if (data.error === "SOLD OUT") {
-      resultArea.innerHTML = `<h2>見積もり結果</h2><p>在庫切れ（SOLD OUT）のため対応できません。</p>`;
-      return;
-    }
-    resultArea.innerHTML = `<h2>見積もり結果</h2><p>エラーが発生しました。</p>`;
+    resultArea.innerHTML = `<h2>見積もり結果</h2><p>${data.error}</p>`;
     return;
   }
 
@@ -164,6 +178,7 @@ async function estimate() {
     <h2>見積もり結果</h2>
     <p><strong>機種:</strong> ${data.model}</p>
     <p><strong>故障内容:</strong> ${data.repair_type}</p>
+    <p><strong>品質ランク:</strong> ${data.quality}</p>
     <p><strong>基本料金:</strong> ¥${data.base_price.toLocaleString()}</p>
   `;
 
@@ -178,66 +193,4 @@ async function estimate() {
   html += `<p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>`;
 
   resultArea.innerHTML = html;
-}
-
-/* =========================
-   コーティング料金（片面 / 両面 / 学生・シニア）
-========================= */
-function calcCoating() {
-  const count = Number(document.getElementById("coat-count").value);
-  const type = document.getElementById("coat-type").value;
-  const person = document.getElementById("coat-person").value;
-  const area = document.getElementById("coat-result");
-
-  if (count <= 0) {
-    area.innerHTML = `<p>1台以上を入力してください。</p>`;
-    return;
-  }
-
-  let total = 0;
-  let unit = 0;
-
-  // 学生・シニアは 1台あたり 2,000円固定（片面/両面関係なし）
-  if (person === "student" || person === "senior") {
-    unit = 2000;
-    total = count * unit;
-  } else {
-    // 通常料金
-    if (count === 1) total = 3300;
-    else if (count === 2) total = 5800;
-    else if (count === 3) total = 8000;
-    else if (count >= 4 && count < 10) total = count * 2500;
-    else if (count >= 10) total = count * 2200;
-
-    // 両面は2倍
-    if (type === "double") total *= 2;
-
-    unit = Math.round(total / count);
-  }
-
-  area.innerHTML = `
-    <h2>コーティング料金</h2>
-    <p><strong>台数:</strong> ${count}台</p>
-    <p><strong>タイプ:</strong> ${type === "single" ? "片面" : "両面"}</p>
-    <p><strong>対象者:</strong> ${
-      person === "normal" ? "一般" : person === "student" ? "学生" : "シニア"
-    }</p>
-    <p><strong>1台あたり:</strong> ¥${unit.toLocaleString()}</p>
-    <p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>
-  `;
-}
-
-function togglePriceRules() {
-  const rules = document.getElementById("price-rules");
-  const icon = document.getElementById("accordion-icon");
-
-  const isHidden = rules.classList.contains("hidden");
-
-  if (isHidden) {
-    rules.classList.remove("hidden");
-    icon.style.transform = "rotate(180deg)";
-  } else {
-    rules.classList.add("hidden");
-    icon.style.transform = "rotate(0deg)";
-  }
 }
