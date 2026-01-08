@@ -239,3 +239,27 @@ select,
   font-size: 0.9rem;
   margin-bottom: 4px;
 }
+
+
+/* LINE問い合わせボタン */
+.line-contact {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.line-btn {
+  display: inline-block;
+  background: #06c755;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  transition: 0.2s;
+}
+
+.line-btn:hover {
+  background: #05b24c;
+}
