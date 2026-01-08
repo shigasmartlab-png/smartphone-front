@@ -218,3 +218,24 @@ select,
 .hidden {
   display: none;
 }
+
+#tab-other h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+#tab-other h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #444;
+}
+
+#tab-other ul {
+  margin: 0 0 6px 18px;
+  padding: 0;
+}
+
+#tab-other li {
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}

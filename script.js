@@ -13,6 +13,7 @@ document.querySelectorAll(".main-tab").forEach(btn => {
   };
 });
 
+
 /* =========================
    API ベース URL（統合版）
 ========================= */
