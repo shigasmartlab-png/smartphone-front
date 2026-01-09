@@ -240,10 +240,17 @@ function calcCoating() {
   let total = 0;
   let unit = 0;
 
+  // ★ 学生・シニアの新ルール
   if (person === "student" || person === "senior") {
-    unit = 2000;
+    if (type === "single") {
+      unit = 2000;      // 片面
+    } else {
+      unit = 4000;      // 両面
+    }
     total = count * unit;
+
   } else {
+    // 一般料金（既存のまま）
     if (count === 1) total = 3300;
     else if (count === 2) total = 5800;
     else if (count === 3) total = 8000;
@@ -266,6 +273,7 @@ function calcCoating() {
     <p><strong>合計:</strong> <span style="font-size:1.2em;">¥${total.toLocaleString()}</span></p>
   `;
 }
+
 
 function togglePriceRules() {
   const rules = document.getElementById("price-rules");
