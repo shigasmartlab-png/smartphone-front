@@ -2,176 +2,62 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>スマホ修理・コーティング 見積もり</title>
+  <title>予約システム（スマホ修理店用）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>スマホ修理・コーティング 見積もり</h1>
+  <h1>予約システム</h1>
 
-  <!-- メインタブ -->
-  <div id="main-tabs">
-    <button class="main-tab active" data-tab="repair">修理</button>
-    <button class="main-tab" data-tab="other">その他修理</button>
-    <button class="main-tab" data-tab="coating">コーティング</button>
-  </div>
-
-  <!-- 修理タブ -->
-  <div id="tab-repair" class="tab-content active">
-
-    <!-- OS 切り替え -->
-    <div id="os-switch">
-      <button id="btn-iphone" class="os-btn active">iPhone</button>
-      <button id="btn-android" class="os-btn">Android</button>
+  <section class="section">
+    <h2>① 日付と時間を選ぶ</h2>
+    <div class="form-row">
+      <label for="date">日付</label>
+      <input type="date" id="date">
     </div>
-
-    <!-- 機種 -->
-    <div class="form-block">
-      <label>機種</label>
-      <select id="model"></select>
-    </div>
-
-    <!-- 故障内容 -->
-    <div class="form-block">
-      <label>故障内容</label>
-      <select id="repair_type"></select>
-    </div>
-
-    <!-- 品質ランク -->
-    <div class="form-block">
-      <label>品質ランク</label>
-      <select id="quality"></select>
-      <div id="quality-description" class="quality-desc"></div>
-    </div>
-
-    <!-- オプション -->
-    <div class="form-block">
-      <label>オプション</label>
-      <div id="options-area"></div>
-    </div>
-
-    <button onclick="estimate()" class="estimate-btn">見積もりを計算</button>
-
-    <div id="result"></div>
-
-<div class="line-contact">
-  <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-    LINEで問い合わせる
-  </a>
-</div>
-
-
-  </div>
-
-
-
-  <!-- その他修理タブ -->
-  <div id="tab-other" class="tab-content">
-
-    <div class="form-block">
-      <h2>その他の修理について</h2>
-      <p>画面交換以外の修理は、機種や部品の種類によって価格が大きく異なります。以下は代表的な修理内容と症状の例です。</p>
-    </div>
-
-    <div class="form-block">
-      <h3>■ バッテリー交換（標準）</h3>
-      <ul>
-        <li>充電の減りが早い</li>
-        <li>電源が急に落ちる</li>
-        <li>最大容量が80%以下</li>
-      </ul>
-      <p>→ PSE認証済みの互換性バッテリーを使用します。</p>
-    </div>
-
-    <div class="form-block">
-      <h3>■ カメラ修理</h3>
-      <ul>
-        <li>ピントが合わない</li>
-        <li>黒い点が映る</li>
-        <li>カメラが起動しない</li>
-      </ul>
-      <p>→ 機種により部品価格が大きく異なるため、診断後に最適な修理方法と料金をご案内します。</p>
-    </div>
-
-    <div class="form-block">
-      <h3>■ 充電口（ドックコネクタ）修理</h3>
-      <ul>
-        <li>充電ケーブルを挿しても反応しない</li>
-        <li>角度を変えないと充電できない</li>
-      </ul>
-      <p>→ 軽度ならクリーニングで改善する場合もあります。交換が必要な場合は診断後にお見積もりします。</p>
-    </div>
-
-    <div class="form-block">
-      <h3>■ スピーカー修理</h3>
-      <ul>
-        <li>音が小さい</li>
-        <li>ノイズが入る</li>
-      </ul>
-      <p>→ 症状に応じてクリーニングまたは部品交換を行います。</p>
-    </div>
-
-<div class="line-contact">
-  <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-    LINEで相談
-  </a>
-</div>
-
-  </div>
-
-  <!-- コーティングタブ -->
-  <div id="tab-coating" class="tab-content">
-
-    <div class="form-block notice-block">
-      <div class="accordion-header" onclick="togglePriceRules()">
-        <span>セット割引の料金体系が自動反映されます</span>
-        <span id="accordion-icon">▼</span>
-      </div>
-
-      <ul id="price-rules" class="price-rules hidden">
-        <li>1台：3,300円</li>
-        <li>2台：5,800円</li>
-        <li>3台：8,000円</li>
-        <li>4〜9台：1台 2,500円</li>
-        <li>10台以上：1台 2,200円（大量割）</li>
-        <li>学生・シニア：1台 2,000円（片面）</li>
-      </ul>
-    </div>
-
-    <div class="form-block">
-      <label>コーティング台数</label>
-      <input type="number" id="coat-count" min="1" value="1" class="number-input">
-    </div>
-
-    <div class="form-block">
-      <label>片面 / 両面</label>
-      <select id="coat-type">
-        <option value="single">片面（画面のみ）</option>
-        <option value="double">両面</option>
+    <div class="form-row">
+      <label for="time">時間</label>
+      <select id="time">
+        <option value="">日付を選択してください</option>
       </select>
     </div>
+    <button id="check-availability">空き状況を確認</button>
+    <div id="availability-result"></div>
+  </section>
 
-    <div class="form-block">
-      <label>対象者</label>
-      <select id="coat-person">
-        <option value="normal">一般</option>
-        <option value="student">学生</option>
-        <option value="senior">シニア（65歳以上）</option>
-      </select>
+  <section class="section">
+    <h2>② お客様情報を入力</h2>
+    <div class="form-row">
+      <label for="name">お名前</label>
+      <input type="text" id="name">
     </div>
+    <div class="form-row">
+      <label for="phone">電話番号</label>
+      <input type="tel" id="phone">
+    </div>
+    <div class="form-row">
+      <label for="menu">メニュー</label>
+      <input type="text" id="menu" placeholder="例：画面修理／バッテリー交換">
+    </div>
+    <div class="form-row">
+      <label for="memo">メモ</label>
+      <textarea id="memo" rows="3" placeholder="気になる点などあればご記入ください"></textarea>
+    </div>
+    <button id="reserve-btn">この内容で予約する</button>
+    <div id="reserve-message"></div>
+  </section>
 
-    <button onclick="calcCoating()" class="estimate-btn">料金を計算</button>
-
-    <div id="coat-result"></div>
-
-<div class="line-contact">
-  <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-    LINEで問い合わせる
-  </a>
-</div>
-
-  </div>
+  <section class="section">
+    <h2>③ 予約のキャンセル</h2>
+    <p>予約時に表示された「予約ID」を入力してください。</p>
+    <div class="form-row">
+      <label for="cancel-id">予約ID</label>
+      <input type="text" id="cancel-id">
+    </div>
+    <button id="cancel-btn">予約をキャンセルする</button>
+    <div id="cancel-message"></div>
+  </section>
 
   <script src="script.js"></script>
 </body>
