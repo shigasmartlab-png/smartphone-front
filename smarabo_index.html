@@ -92,6 +92,21 @@
 
 <body>
 
+<!-- ============================
+     パスワード画面
+============================ -->
+<div id="password-screen" style="text-align:center; margin-top:50px;">
+  <h2>従業員ログイン</h2>
+  <input type="password" id="pass_input" placeholder="パスワードを入力" style="margin-top:20px;">
+  <button onclick="checkPass()">ログイン</button>
+  <p id="pass_error" style="color:#f55; margin-top:10px;"></p>
+</div>
+
+<!-- ============================
+     メインコンテンツ
+============================ -->
+<div id="main-content" style="display:none;">
+
 <h2>すまらぼ簡易計算</h2>
 
 <label>パーツ料金①</label>
@@ -143,8 +158,31 @@
 <input type="text" id="search_word" placeholder="例：iPhone12 画面修理">
 
 <button onclick="search()">Googleで相場検索</button>
+<button onclick="searchUsed()">中古検索</button>
+
+</div>
 
 <script>
+/* ============================
+   パスワード認証
+============================ */
+const CORRECT_PASS = "smartlab2025";  // ←好きなパスワードに変更
+
+function checkPass() {
+  const input = document.getElementById("pass_input").value.trim();
+  const error = document.getElementById("pass_error");
+
+  if (input === CORRECT_PASS) {
+    document.getElementById("password-screen").style.display = "none";
+    document.getElementById("main-content").style.display = "block";
+  } else {
+    error.textContent = "パスワードが違います";
+  }
+}
+
+/* ============================
+   計算処理
+============================ */
 function calc() {
   const p1 = Number(document.getElementById("p1").value || 0);
   const p2 = Number(document.getElementById("p2").value || 0);
@@ -155,15 +193,25 @@ function calc() {
   const gross = Number(document.getElementById("gross").value);
   const option = Number(document.getElementById("option_price").value);
 
+  // 原価合計
   const cost = p1 + p2 + p3 + shipping + labor;
+
+  // 粗利係数を掛ける
   const raw = cost * gross;
+
+  // 100円単位で切り上げ
   const base_price = Math.ceil(raw / 100) * 100;
+
+  // オプション加算
   const total = base_price + option;
 
   document.getElementById("result").textContent =
     `料金：${total.toLocaleString()} 円`;
 }
 
+/* ============================
+   相場検索
+============================ */
 function search() {
   const word = document.getElementById("search_word").value.trim();
   if (!word) return;
@@ -171,10 +219,22 @@ function search() {
   const query = encodeURIComponent(word + " 相場");
   window.open("https://www.google.com/search?q=" + query, "_blank");
 }
+
+/* ============================
+   中古検索
+============================ */
+function searchUsed() {
+  const word = document.getElementById("search_word").value.trim();
+  if (!word) return;
+
+  const query = encodeURIComponent(word + " 中古");
+  window.open("https://www.google.com/search?q=" + query, "_blank");
+}
 </script>
 
 </body>
 </html>
+
 </div>
 
 <script>
