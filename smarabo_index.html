@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>すまらぼ簡易計算</title>
+
+<style>
+  body {
+    background: #111;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 16px;
+    margin: 0;
+  }
+
+  h2 {
+    border-left: 5px solid #4cd964;
+    padding-left: 10px;
+    font-size: 20px;
+    margin-top: 25px;
+  }
+
+  label {
+    font-size: 15px;
+    margin-top: 12px;
+    display: block;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 14px;
+    margin-top: 6px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  button {
+    width: 100%;
+    padding: 16px;
+    margin-top: 18px;
+    background: #4cd964;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  button:active {
+    opacity: 0.8;
+  }
+
+  hr {
+    margin: 35px 0;
+    border: 0;
+    border-top: 1px solid #444;
+  }
+
+  .result {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 15px;
+    color: #4cd964;
+    text-align: center;
+  }
+
+  /* スマホ横向き・タブレット向け */
+  @media (min-width: 600px) {
+    body {
+      max-width: 500px;
+      margin: auto;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<h2>すまらぼ簡易計算</h2>
+
+<label>パーツ料金①</label>
+<input type="number" id="p1" placeholder="例：3000">
+
+<label>パーツ料金②</label>
+<input type="number" id="p2" placeholder="例：1500">
+
+<label>パーツ料金③</label>
+<input type="number" id="p3" placeholder="例：0">
+
+<label>送料</label>
+<select id="shipping">
+  <option value="450">450円</option>
+  <option value="770">770円</option>
+</select>
+
+<label>工賃</label>
+<select id="labor">
+  <option value="2000">2000円</option>
+  <option value="3000">3000円</option>
+</select>
+
+<label>粗利係数</label>
+<select id="gross">
+  <option value="1.5">1.5</option>
+  <option value="1.6">1.6</option>
+  <option value="1.7">1.7</option>
+  <option value="1.8">1.8</option>
+  <option value="1.9" selected>1.9</option>
+</select>
+
+<label>オプション料金</label>
+<select id="option_price">
+  <option value="0">なし</option>
+  <option value="1500">バッテリー大容量化（1500円）</option>
+  <option value="1500">コーティング片面（1500円）</option>
+</select>
+
+<button onclick="calc()">料金確認</button>
+
+<div class="result" id="result"></div>
+
+<hr>
+
+<h2>相場確認</h2>
+
+<label>検索ワード</label>
+<input type="text" id="search_word" placeholder="例：iPhone12 画面修理">
+
+<button onclick="search()">Googleで相場検索</button>
+
+<script>
+function calc() {
+  const p1 = Number(document.getElementById("p1").value || 0);
+  const p2 = Number(document.getElementById("p2").value || 0);
+  const p3 = Number(document.getElementById("p3").value || 0);
+
+  const shipping = Number(document.getElementById("shipping").value);
+  const labor = Number(document.getElementById("labor").value);
+  const gross = Number(document.getElementById("gross").value);
+  const option = Number(document.getElementById("option_price").value);
+
+  const cost = p1 + p2 + p3 + shipping + labor;
+  const raw = cost * gross;
+  const base_price = Math.ceil(raw / 100) * 100;
+  const total = base_price + option;
+
+  document.getElementById("result").textContent =
+    `料金：${total.toLocaleString()} 円`;
+}
+
+function search() {
+  const word = document.getElementById("search_word").value.trim();
+  if (!word) return;
+
+  const query = encodeURIComponent(word + " 相場");
+  window.open("https://www.google.com/search?q=" + query, "_blank");
+}
+</script>
+
+</body>
+</html>
