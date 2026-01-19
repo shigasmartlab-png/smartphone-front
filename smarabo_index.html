@@ -1,3 +1,13 @@
+<div id="password-screen" style="text-align:center; margin-top:50px;">
+  <h2>従業員ログイン</h2>
+  <input type="password" id="pass_input" placeholder="パスワードを入力" style="margin-top:20px;">
+  <button onclick="checkPass()">ログイン</button>
+  <p id="pass_error" style="color:#f55; margin-top:10px;"></p>
+</div>
+
+<div id="main-content" style="display:none;">
+  <!-- ここに「すまらぼ簡易計算ツール」の本体が入る -->
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -165,3 +175,21 @@ function search() {
 
 </body>
 </html>
+</div>
+
+<script>
+const CORRECT_PASS = "0120";  // ← 好きなパスワードに変更
+
+function checkPass() {
+  const input = document.getElementById("pass_input").value.trim();
+  const error = document.getElementById("pass_error");
+
+  if (input === CORRECT_PASS) {
+    document.getElementById("password-screen").style.display = "none";
+    document.getElementById("main-content").style.display = "block";
+  } else {
+    error.textContent = "パスワードが違います";
+  }
+}
+</script>
+
