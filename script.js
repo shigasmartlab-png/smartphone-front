@@ -14,6 +14,22 @@ const QUALITY_DESCRIPTIONS = {
 };
 
 /* ============================================================
+   メインタブ切り替え
+============================================================ */
+document.querySelectorAll(".main-tab").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".main-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const tab = btn.dataset.tab;
+
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.getElementById(`tab-${tab}`).classList.add("active");
+  };
+});
+
+
+/* ============================================================
    OS 切り替え
 ============================================================ */
 let currentOS = "iPhone";
