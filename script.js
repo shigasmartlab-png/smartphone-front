@@ -4,7 +4,7 @@
 const API_BASE = "https://estimate-api-6j8x.onrender.com";
 
 /* ============================================================
-   品質ランク説明文（JS側で管理）
+   品質ランク説明文
 ============================================================ */
 const QUALITY_DESCRIPTIONS = {
   "互換品（LCD）": "純正ではない液晶パネル。価格が安いが、発色や明るさは純正より劣る場合があります。",
@@ -38,7 +38,7 @@ window.onload = async () => {
 };
 
 /* ============================================================
-   機種一覧（CSV準拠）
+   機種一覧
 ============================================================ */
 async function loadModels() {
   const res = await fetch(`${API_BASE}/models?os=${encodeURIComponent(currentOS)}`);
@@ -59,7 +59,7 @@ async function loadModels() {
 }
 
 /* ============================================================
-   故障内容 + 品質ランク（CSV準拠）
+   故障内容 + 品質ランク
 ============================================================ */
 async function loadRepairs() {
   const model = document.getElementById("model").value;
@@ -72,7 +72,6 @@ async function loadRepairs() {
   repairSelect.innerHTML = "";
   qualitySelect.innerHTML = "";
 
-  // 修理内容ごとに品質ランクをグループ化
   const grouped = {};
   (data.repairs || []).forEach(r => {
     if (!grouped[r.name]) grouped[r.name] = [];
@@ -82,7 +81,6 @@ async function loadRepairs() {
     });
   });
 
-  // 修理内容セレクト
   Object.keys(grouped).forEach(name => {
     const opt = document.createElement("option");
     opt.value = name;
@@ -90,7 +88,6 @@ async function loadRepairs() {
     repairSelect.appendChild(opt);
   });
 
-  // 修理内容変更時に品質ランクを更新
   repairSelect.onchange = () => updateQuality(grouped);
   updateQuality(grouped);
 }
@@ -114,15 +111,12 @@ function updateQuality(grouped) {
     qualitySelect.appendChild(opt);
   });
 
-  // 品質ランク説明を更新
   updateQualityDescription();
-
-  // 品質ランク変更時にも説明更新
   qualitySelect.onchange = updateQualityDescription;
 }
 
 /* ============================================================
-   品質ランク説明文の更新
+   品質ランク説明文
 ============================================================ */
 function updateQualityDescription() {
   const q = document.getElementById("quality").value;
@@ -131,33 +125,26 @@ function updateQualityDescription() {
 }
 
 /* ============================================================
-   修理タブ：オプション（階層化）
+   修理タブ：オプション（バッテリー大容量化 + コーティング）
 ============================================================ */
-function showCoatingOptions() {
-  const main = document.getElementById("option_main").value;
-  document.getElementById("coating_sub").style.display =
-    main === "coating" ? "block" : "none";
-}
-
 function getSelectedOptions() {
-  const main = document.getElementById("option_main").value;
+  const options = [];
 
-  if (!main) return [];
-
-  if (main === "バッテリー大容量化") {
-    return ["バッテリー大容量化"];
+  const battery = document.getElementById("opt-battery");
+  if (battery && battery.checked) {
+    options.push("バッテリー大容量化");
   }
 
-  if (main === "coating") {
-    const sub = document.getElementById("option_sub").value;
-    return [sub]; // options.csv と完全一致
+  const coating = document.getElementById("opt-coating").value;
+  if (coating) {
+    options.push(coating);
   }
 
-  return [];
+  return options;
 }
 
 /* ============================================================
-   修理見積もり（CSV準拠）
+   修理見積もり
 ============================================================ */
 async function estimate() {
   const model = document.getElementById("model").value;
@@ -219,7 +206,7 @@ document.querySelectorAll(".coat-tab").forEach(btn => {
 });
 
 /* ============================================================
-   ガラスコーティング（CSV準拠）
+   ガラスコーティング
 ============================================================ */
 async function calcGlassCoating() {
   const count = Number(document.getElementById("glass-count").value);
@@ -239,7 +226,7 @@ async function calcGlassCoating() {
 }
 
 /* ============================================================
-   セラミックコーティング（CSV準拠）
+   セラミックコーティング
 ============================================================ */
 async function calcCeramicCoating() {
   const count = Number(document.getElementById("ceramic-count").value);
