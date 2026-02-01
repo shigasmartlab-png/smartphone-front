@@ -144,7 +144,7 @@ function getSelectedOptions() {
 }
 
 /* ============================================================
-   修理見積もり
+   修理見積もり（コーティングも合算）
 ============================================================ */
 async function estimate() {
   const model = document.getElementById("model").value;
