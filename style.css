@@ -240,7 +240,6 @@ select,
   margin-bottom: 4px;
 }
 
-
 /* LINE問い合わせボタン */
 .line-contact {
   text-align: center;
@@ -262,4 +261,40 @@ select,
 
 .line-btn:hover {
   background: #05b24c;
+}
+
+/* ============================
+   コーティングタブ（OS切り替え方式）
+============================ */
+#coat-switch {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.coat-btn {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 999px;
+  border: 1px solid #aaa;
+  background: #eee;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.2s;
+}
+
+.coat-btn.active {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+/* コーティング内容切り替え */
+.coat-content {
+  display: none;
+}
+
+.coat-content.active {
+  display: block;
 }

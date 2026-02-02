@@ -28,26 +28,22 @@
       <button id="btn-android" class="os-btn">Android</button>
     </div>
 
-    <!-- 機種 -->
     <div class="form-block">
       <label>機種</label>
       <select id="model"></select>
     </div>
 
-    <!-- 故障内容 -->
     <div class="form-block">
       <label>故障内容</label>
       <select id="repair_type"></select>
     </div>
 
-    <!-- 品質ランク -->
     <div class="form-block">
       <label>品質ランク</label>
       <select id="quality"></select>
       <div id="quality-description" class="quality-desc"></div>
     </div>
 
-    <!-- バッテリー大容量化 -->
     <div class="form-block">
       <label>バッテリー大容量化</label>
       <label>
@@ -56,29 +52,19 @@
       </label>
     </div>
 
-    <!-- コーティング -->
     <div class="form-block">
       <label>コーティング</label>
       <select id="opt-coating">
         <option value="">選択してください</option>
-
-        <!-- ★ options.csv と完全一致（半角カッコ） -->
-        <option value="抗菌ガラスコーティング(片面)">抗菌ガラスコーティング(片面)</option>
-        <option value="抗菌ガラスコーティング(両面)">抗菌ガラスコーティング(両面)</option>
-        <option value="セラミックコーティング(片面)">セラミックコーティング(片面)</option>
-        <option value="セラミックコーティング(両面)">セラミックコーティング(両面)</option>
+        <option value="抗菌ガラスコーティング(片面)">抗菌ガラスコーティング（片面）</option>
+        <option value="抗菌ガラスコーティング(両面)">抗菌ガラスコーティング（両面）</option>
+        <option value="セラミックコーティング(片面)">セラミックコーティング（片面）</option>
+        <option value="セラミックコーティング(両面)">セラミックコーティング（両面）</option>
       </select>
     </div>
 
     <button onclick="estimate()" class="estimate-btn">見積もりを計算</button>
-
     <div id="result"></div>
-
-    <div class="line-contact">
-      <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-        LINEで問い合わせる
-      </a>
-    </div>
 
   </div>
 
@@ -88,34 +74,17 @@
   <div id="tab-other" class="tab-content">
     <h2>その他修理について</h2>
     <p>画面交換以外の修理は、機種や部品の種類によって価格が大きく異なります。</p>
-
-    <h3>■ バッテリー交換（標準）</h3>
-    <ul><li>電源が落ちる / 最大容量80%以下</li></ul>
-
-    <h3>■ カメラ修理</h3>
-    <ul><li>ピントが合わない / 黒点が映る</li></ul>
-
-    <h3>■ 充電口修理</h3>
-    <ul><li>角度を変えないと充電できない</li></ul>
-
-    <h3>■ スピーカー修理</h3>
-    <ul><li>音が小さい / ノイズが入る</li></ul>
-
-    <div class="line-contact">
-      <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-        LINEで相談
-      </a>
-    </div>
   </div>
 
   <!-- ============================
-       コーティングタブ（2タブ構造）
+       コーティングタブ（OS切り替え方式）
   ============================ -->
   <div id="tab-coating" class="tab-content">
 
-    <div id="coat-tabs">
-      <button class="coat-tab active" data-coat="glass">ガラスコーティング</button>
-      <button class="coat-tab" data-coat="ceramic">セラミックコーティング</button>
+    <!-- OS切り替え方式のタブ -->
+    <div id="coat-switch">
+      <button class="coat-btn active" data-coat="glass">ガラスコーティング</button>
+      <button class="coat-btn" data-coat="ceramic">セラミックコーティング</button>
     </div>
 
     <!-- ガラス -->

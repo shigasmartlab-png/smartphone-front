@@ -1,5 +1,5 @@
 /* ============================================================
-   メインタブ切り替え（←これが抜けていた）
+   メインタブ切り替え
 ============================================================ */
 document.querySelectorAll(".main-tab").forEach(btn => {
   btn.onclick = () => {
@@ -10,6 +10,21 @@ document.querySelectorAll(".main-tab").forEach(btn => {
 
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
     document.getElementById(`tab-${tab}`).classList.add("active");
+  };
+});
+
+/* ============================================================
+   コーティングタブ切り替え（OS切り替え方式）
+============================================================ */
+document.querySelectorAll(".coat-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".coat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const tab = btn.dataset.coat;
+
+    document.querySelectorAll(".coat-content").forEach(c => c.classList.remove("active"));
+    document.getElementById(`coat-${tab}`).classList.add("active");
   };
 });
 
@@ -140,7 +155,7 @@ function updateQualityDescription() {
 }
 
 /* ============================================================
-   修理タブ：オプション（バッテリー大容量化 + コーティング）
+   修理タブ：オプション
 ============================================================ */
 function getSelectedOptions() {
   const options = [];
@@ -159,7 +174,7 @@ function getSelectedOptions() {
 }
 
 /* ============================================================
-   修理見積もり（コーティングも合算）
+   修理見積もり
 ============================================================ */
 async function estimate() {
   const model = document.getElementById("model").value;
@@ -204,21 +219,6 @@ async function estimate() {
 
   resultArea.innerHTML = html;
 }
-
-/* ============================================================
-   コーティングタブ：サブタブ切り替え
-============================================================ */
-document.querySelectorAll(".coat-tab").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".coat-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    const tab = btn.dataset.coat;
-
-    document.querySelectorAll(".coat-content").forEach(c => c.classList.remove("active"));
-    document.getElementById(`coat-${tab}`).classList.add("active");
-  };
-});
 
 /* ============================================================
    ガラスコーティング
