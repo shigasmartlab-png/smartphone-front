@@ -19,6 +19,36 @@ h1 {
 }
 
 /* ============================
+   ヘッダー画像（横長）
+============================ */
+.header-image {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  overflow: hidden;
+
+  box-shadow:
+    6px 6px 12px rgba(0,0,0,0.45),
+    -6px -6px 12px rgba(255,255,255,0.05);
+
+  animation: fadeInHeader 0.6s ease;
+}
+
+.header-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+/* フェードアニメーション */
+@keyframes fadeInHeader {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================
    メインタブ（ネオモーフィズム＋フェード）
 ============================ */
 #main-tabs {
