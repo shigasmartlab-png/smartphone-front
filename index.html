@@ -66,6 +66,13 @@
     <button onclick="estimate()" class="estimate-btn">見積もりを計算</button>
     <div id="result"></div>
 
+    <!-- ★ 修理タブ：LINEボタン -->
+    <div class="line-contact">
+      <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
+        LINEで問い合わせる
+      </a>
+    </div>
+
   </div>
 
 
@@ -73,6 +80,7 @@
        その他修理タブ
   ============================ -->
   <div id="tab-other" class="tab-content">
+
     <div class="form-block">
       <h2>その他の修理について</h2>
       <p>画面交換以外の修理は、機種や部品の種類によって価格が大きく異なります。以下は代表的な修理内容と症状の例です。</p>
@@ -116,38 +124,44 @@
       <p>→ 症状に応じてクリーニングまたは部品交換を行います。</p>
     </div>
 
-</div>
+    <!-- ★ その他修理タブ：LINEボタン -->
+    <div class="line-contact">
+      <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
+        LINEで問い合わせる
+      </a>
+    </div>
+
+  </div>
+
 
   <!-- ============================
-       コーティングタブ（OS切り替え方式）
+       コーティングタブ
   ============================ -->
   <div id="tab-coating" class="tab-content">
 
-    <!-- OS切り替え方式のタブ -->
     <div id="coat-switch">
       <button class="coat-btn active" data-coat="glass">ガラスコーティング</button>
       <button class="coat-btn" data-coat="ceramic">セラミックコーティング</button>
     </div>
 
     <!-- ガラス -->
-<div id="coat-glass" class="coat-content active">
+    <div id="coat-glass" class="coat-content active">
 
-  <!-- セット割ブロック（ガラス用） -->
-  <div class="form-block notice-block">
-    <div class="accordion-header" onclick="togglePriceRulesGlass()">
-      <span>セット割引の料金体系が自動反映されます</span>
-      <span id="accordion-icon-glass">▼</span>
-    </div>
+      <div class="form-block notice-block">
+        <div class="accordion-header" onclick="togglePriceRulesGlass()">
+          <span>セット割引の料金体系が自動反映されます</span>
+          <span id="accordion-icon-glass">▼</span>
+        </div>
 
-    <ul id="price-rules-glass" class="price-rules hidden">
-      <li>1台：3,300円</li>
-      <li>2台：5,800円</li>
-      <li>3台：8,000円</li>
-      <li>4〜9台：1台 2,500円</li>
-      <li>10台以上：1台 2,200円</li>
-      <li>学生・シニア：1台 2,000円（片面）</li>
-    </ul>
-  </div>
+        <ul id="price-rules-glass" class="price-rules hidden">
+          <li>1台：3,300円</li>
+          <li>2台：5,800円</li>
+          <li>3台：8,000円</li>
+          <li>4〜9台：1台 2,500円</li>
+          <li>10台以上：1台 2,200円</li>
+          <li>学生・シニア：1台 2,000円（片面）</li>
+        </ul>
+      </div>
 
       <div class="form-block">
         <label>台数</label>
@@ -173,26 +187,33 @@
 
       <button onclick="calcGlassCoating()" class="estimate-btn">料金を計算</button>
       <div id="glass-result"></div>
+
+      <!-- ★ ガラスタブ：LINEボタン -->
+      <div class="line-contact">
+        <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
+          LINEで問い合わせる
+        </a>
+      </div>
+
     </div>
 
     <!-- セラミック -->
-<div id="coat-ceramic" class="coat-content">
+    <div id="coat-ceramic" class="coat-content">
 
-  <!-- セット割ブロック（セラミック用） -->
-  <div class="form-block notice-block">
-    <div class="accordion-header" onclick="togglePriceRulesCeramic()">
-      <span>セット割引の料金体系が自動反映されます</span>
-      <span id="accordion-icon-ceramic">▼</span>
-    </div>
+      <div class="form-block notice-block">
+        <div class="accordion-header" onclick="togglePriceRulesCeramic()">
+          <span>セット割引の料金体系が自動反映されます</span>
+          <span id="accordion-icon-ceramic">▼</span>
+        </div>
 
-    <ul id="price-rules-ceramic" class="price-rules hidden">
-      <li>1台：5,500円</li>
-      <li>2台：10,000円</li>
-      <li>3台：9,200円</li>
-      <li>4〜9台：1台 4,500円</li>
-      <li>10台以上：1台 3,500円</li>
-    </ul>
-  </div>
+        <ul id="price-rules-ceramic" class="price-rules hidden">
+          <li>1台：5,500円</li>
+          <li>2台：10,000円</li>
+          <li>3台：9,200円</li>
+          <li>4〜9台：1台 4,500円</li>
+          <li>10台以上：1台 3,500円</li>
+        </ul>
+      </div>
 
       <div class="form-block">
         <label>台数</label>
@@ -218,6 +239,14 @@
 
       <button onclick="calcCeramicCoating()" class="estimate-btn">料金を計算</button>
       <div id="ceramic-result"></div>
+
+      <!-- ★ セラミックタブ：LINEボタン -->
+      <div class="line-contact">
+        <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
+          LINEで問い合わせる
+        </a>
+      </div>
+
     </div>
 
   </div>
