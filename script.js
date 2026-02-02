@@ -1,32 +1,54 @@
 /* ============================================================
-   メインタブ切り替え
+   初期セットアップ
 ============================================================ */
-document.querySelectorAll(".main-tab").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".main-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    const tab = btn.dataset.tab;
-
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    document.getElementById(`tab-${tab}`).classList.add("active");
-  };
+document.addEventListener("DOMContentLoaded", () => {
+  setupMainTabs();
+  setupCoatTabs();
+  setupOsSwitch();
+  setupAccordions();
 });
 
 /* ============================================================
-   コーティングタブ切り替え（OS切り替え方式）
+   メインタブ切り替え（フェード対応）
 ============================================================ */
-document.querySelectorAll(".coat-btn").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".coat-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+function setupMainTabs() {
+  const tabButtons = document.querySelectorAll(".main-tab");
+  const tabContents = document.querySelectorAll(".tab-content");
 
-    const tab = btn.dataset.coat;
+  tabButtons.forEach(btn => {
+    btn.onclick = () => {
+      tabButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
 
-    document.querySelectorAll(".coat-content").forEach(c => c.classList.remove("active"));
-    document.getElementById(`coat-${tab}`).classList.add("active");
-  };
-});
+      const tab = btn.dataset.tab;
+
+      tabContents.forEach(c => c.classList.remove("active"));
+      const target = document.getElementById(`tab-${tab}`);
+      if (target) target.classList.add("active");
+    };
+  });
+}
+
+/* ============================================================
+   コーティングタブ切り替え（フェード対応）
+============================================================ */
+function setupCoatTabs() {
+  const coatButtons = document.querySelectorAll(".coat-btn");
+  const coatContents = document.querySelectorAll(".coat-content");
+
+  coatButtons.forEach(btn => {
+    btn.onclick = () => {
+      coatButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const tab = btn.dataset.coat;
+
+      coatContents.forEach(c => c.classList.remove("active"));
+      const target = document.getElementById(`coat-${tab}`);
+      if (target) target.classList.add("active");
+    };
+  });
+}
 
 /* ============================================================
    API ベース URL
@@ -44,18 +66,46 @@ const QUALITY_DESCRIPTIONS = {
 };
 
 /* ============================================================
-   OS 切り替え
+   OS 切り替え（iOS風トグル＋API連動）
 ============================================================ */
 let currentOS = "iPhone";
 
-document.getElementById("btn-iphone").onclick = () => switchOS("iPhone");
-document.getElementById("btn-android").onclick = () => switchOS("Android");
+function setupOsSwitch() {
+  const osSwitch = document.getElementById("os-switch");
+  const btnIphone = document.getElementById("btn-iphone");
+  const btnAndroid = document.getElementById("btn-android");
+
+  if (!osSwitch || !btnIphone || !btnAndroid) return;
+
+  // 初期状態
+  osSwitch.classList.add("iphone");
+  btnIphone.classList.add("active");
+
+  btnIphone.onclick = () => switchOS("iPhone");
+  btnAndroid.onclick = () => switchOS("Android");
+}
 
 function switchOS(os) {
+  const osSwitch = document.getElementById("os-switch");
+  const btnIphone = document.getElementById("btn-iphone");
+  const btnAndroid = document.getElementById("btn-android");
+
   currentOS = os;
 
-  document.getElementById("btn-iphone").classList.toggle("active", os === "iPhone");
-  document.getElementById("btn-android").classList.toggle("active", os === "Android");
+  if (osSwitch) {
+    if (os === "iPhone") {
+      osSwitch.classList.add("iphone");
+      osSwitch.classList.remove("android");
+    } else {
+      osSwitch.classList.add("android");
+      osSwitch.classList.remove("iphone");
+    }
+  }
+
+  if (btnIphone && btnAndroid) {
+    btnIphone.classList.toggle("active", os === "iPhone");
+    btnAndroid.classList.toggle("active", os === "Android");
+  }
 
   loadModels();
 }
@@ -75,6 +125,8 @@ async function loadModels() {
   const data = await res.json();
 
   const modelSelect = document.getElementById("model");
+  if (!modelSelect) return;
+
   modelSelect.innerHTML = "";
 
   (data.models || []).forEach(m => {
@@ -92,13 +144,18 @@ async function loadModels() {
    故障内容 + 品質ランク
 ============================================================ */
 async function loadRepairs() {
-  const model = document.getElementById("model").value;
+  const modelSelect = document.getElementById("model");
+  if (!modelSelect) return;
+
+  const model = modelSelect.value;
 
   const res = await fetch(`${API_BASE}/repairs?model=${encodeURIComponent(model)}`);
   const data = await res.json();
 
   const repairSelect = document.getElementById("repair_type");
   const qualitySelect = document.getElementById("quality");
+  if (!repairSelect || !qualitySelect) return;
+
   repairSelect.innerHTML = "";
   qualitySelect.innerHTML = "";
 
@@ -123,11 +180,14 @@ async function loadRepairs() {
 }
 
 function updateQuality(grouped) {
-  const repair = document.getElementById("repair_type").value;
+  const repairSelect = document.getElementById("repair_type");
   const qualitySelect = document.getElementById("quality");
+  if (!repairSelect || !qualitySelect) return;
+
+  const repair = repairSelect.value;
   qualitySelect.innerHTML = "";
 
-  grouped[repair].forEach(item => {
+  (grouped[repair] || []).forEach(item => {
     const opt = document.createElement("option");
     opt.value = item.quality;
 
@@ -149,9 +209,13 @@ function updateQuality(grouped) {
    品質ランク説明文
 ============================================================ */
 function updateQualityDescription() {
-  const q = document.getElementById("quality").value;
+  const qualitySelect = document.getElementById("quality");
+  const descEl = document.getElementById("quality-description");
+  if (!qualitySelect || !descEl) return;
+
+  const q = qualitySelect.value;
   const desc = QUALITY_DESCRIPTIONS[q] || "";
-  document.getElementById("quality-description").textContent = desc;
+  descEl.textContent = desc;
 }
 
 /* ============================================================
@@ -165,9 +229,9 @@ function getSelectedOptions() {
     options.push("バッテリー大容量化");
   }
 
-  const coating = document.getElementById("opt-coating").value;
-  if (coating) {
-    options.push(coating);
+  const coatingSelect = document.getElementById("opt-coating");
+  if (coatingSelect && coatingSelect.value) {
+    options.push(coatingSelect.value);
   }
 
   return options;
@@ -177,9 +241,16 @@ function getSelectedOptions() {
    修理見積もり
 ============================================================ */
 async function estimate() {
-  const model = document.getElementById("model").value;
-  const repair = document.getElementById("repair_type").value;
-  const quality = document.getElementById("quality").value;
+  const modelEl = document.getElementById("model");
+  const repairEl = document.getElementById("repair_type");
+  const qualityEl = document.getElementById("quality");
+  const resultArea = document.getElementById("result");
+
+  if (!modelEl || !repairEl || !qualityEl || !resultArea) return;
+
+  const model = modelEl.value;
+  const repair = repairEl.value;
+  const quality = qualityEl.value;
 
   const selectedOptions = getSelectedOptions().join(",");
 
@@ -191,8 +262,6 @@ async function estimate() {
 
   const res = await fetch(url);
   const data = await res.json();
-
-  const resultArea = document.getElementById("result");
 
   if (data.error) {
     resultArea.innerHTML = `<h2>見積もり結果</h2><p>${data.error}</p>`;
@@ -207,7 +276,7 @@ async function estimate() {
     <p><strong>基本料金:</strong> ¥${data.base_price.toLocaleString()}</p>
   `;
 
-  if (data.options.length > 0) {
+  if (data.options && data.options.length > 0) {
     html += `<p><strong>オプション:</strong></p><ul>`;
     data.options.forEach(opt => {
       html += `<li>${opt.name}：¥${opt.price.toLocaleString()}</li>`;
@@ -224,16 +293,23 @@ async function estimate() {
    ガラスコーティング
 ============================================================ */
 async function calcGlassCoating() {
-  const count = Number(document.getElementById("glass-count").value);
-  const type = document.getElementById("glass-type").value;
-  const person = document.getElementById("glass-person").value;
+  const countEl = document.getElementById("glass-count");
+  const typeEl = document.getElementById("glass-type");
+  const personEl = document.getElementById("glass-person");
+  const resultEl = document.getElementById("glass-result");
+
+  if (!countEl || !typeEl || !personEl || !resultEl) return;
+
+  const count = Number(countEl.value);
+  const type = typeEl.value;
+  const person = personEl.value;
 
   const params = new URLSearchParams({ count, type, person });
 
   const res = await fetch(`${API_BASE}/coating/glass?${params.toString()}`);
   const data = await res.json();
 
-  document.getElementById("glass-result").innerHTML = `
+  resultEl.innerHTML = `
     <h2>ガラスコーティング見積もり</h2>
     <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
     <p><strong>合計：¥${data.total.toLocaleString()}</strong></p>
@@ -244,35 +320,61 @@ async function calcGlassCoating() {
    セラミックコーティング
 ============================================================ */
 async function calcCeramicCoating() {
-  const count = Number(document.getElementById("ceramic-count").value);
-  const type = document.getElementById("ceramic-type").value;
-  const person = document.getElementById("ceramic-person").value;
+  const countEl = document.getElementById("ceramic-count");
+  const typeEl = document.getElementById("ceramic-type");
+  const personEl = document.getElementById("ceramic-person");
+  const resultEl = document.getElementById("ceramic-result");
+
+  if (!countEl || !typeEl || !personEl || !resultEl) return;
+
+  const count = Number(countEl.value);
+  const type = typeEl.value;
+  const person = personEl.value;
 
   const params = new URLSearchParams({ count, type, person });
 
   const res = await fetch(`${API_BASE}/coating/ceramic?${params.toString()}`);
   const data = await res.json();
 
-  document.getElementById("ceramic-result").innerHTML = `
+  resultEl.innerHTML = `
     <h2>セラミックコーティング見積もり</h2>
     <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
     <p><strong>合計：¥${data.total.toLocaleString()}</strong></p>
   `;
 }
 
+/* ============================================================
+   セット割アコーディオン（スムーズ開閉版）
+============================================================ */
+function setupAccordions() {
+  const glassHeader = document.querySelector("#coat-glass .accordion-header");
+  const glassList = document.getElementById("price-rules-glass");
+  const glassIcon = document.getElementById("accordion-icon-glass");
 
-function togglePriceRulesGlass() {
-  const list = document.getElementById("price-rules-glass");
-  const icon = document.getElementById("accordion-icon-glass");
+  if (glassHeader && glassList && glassIcon) {
+    glassHeader.addEventListener("click", () => {
+      toggleAccordion(glassList, glassIcon);
+    });
+  }
 
-  list.classList.toggle("hidden");
-  icon.style.transform = list.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+  const ceramicHeader = document.querySelector("#coat-ceramic .accordion-header");
+  const ceramicList = document.getElementById("price-rules-ceramic");
+  const ceramicIcon = document.getElementById("accordion-icon-ceramic");
+
+  if (ceramicHeader && ceramicList && ceramicIcon) {
+    ceramicHeader.addEventListener("click", () => {
+      toggleAccordion(ceramicList, ceramicIcon);
+    });
+  }
 }
 
-function togglePriceRulesCeramic() {
-  const list = document.getElementById("price-rules-ceramic");
-  const icon = document.getElementById("accordion-icon-ceramic");
-
-  list.classList.toggle("hidden");
-  icon.style.transform = list.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+function toggleAccordion(listEl, iconEl) {
+  const isOpen = listEl.classList.contains("open");
+  if (isOpen) {
+    listEl.classList.remove("open");
+    iconEl.style.transform = "rotate(0deg)";
+  } else {
+    listEl.classList.add("open");
+    iconEl.style.transform = "rotate(180deg)";
+  }
 }

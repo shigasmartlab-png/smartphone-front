@@ -1,5 +1,5 @@
 /* ============================
-   全体
+   全体（ダーク × ネオモーフィズム）
 ============================ */
 body {
   background: #1A1A1A;
@@ -7,6 +7,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   padding: 20px;
   margin: 0;
+  padding-bottom: 80px; /* 固定LINEボタン分の余白 */
 }
 
 h1 {
@@ -18,7 +19,7 @@ h1 {
 }
 
 /* ============================
-   メインタブ（ネオモーフィズム）
+   メインタブ（ネオモーフィズム＋フェード）
 ============================ */
 #main-tabs {
   display: flex;
@@ -35,11 +36,9 @@ h1 {
   color: #A8A8A8;
   cursor: pointer;
   font-size: 1rem;
-
   box-shadow:
     inset 6px 6px 12px rgba(0,0,0,0.45),
     inset -6px -6px 12px rgba(255,255,255,0.05);
-
   transition: 0.25s ease;
 }
 
@@ -50,15 +49,20 @@ h1 {
     -6px -6px 12px rgba(255,255,255,0.05);
 }
 
-/* ============================
-   タブコンテンツ
-============================ */
+/* タブコンテンツ＋フェード */
 .tab-content {
   display: none;
+  opacity: 0;
 }
 
 .tab-content.active {
   display: block;
+  animation: fadeInTab 0.25s ease forwards;
+}
+
+@keyframes fadeInTab {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================
@@ -69,7 +73,6 @@ h1 {
   padding: 18px;
   border-radius: 16px;
   margin-bottom: 18px;
-
   box-shadow:
     6px 6px 12px rgba(0,0,0,0.45),
     -6px -6px 12px rgba(255,255,255,0.05);
@@ -95,46 +98,71 @@ input[type="number"] {
   border: none;
   background: #1A1A1A;
   color: #EAEAEA;
+  box-shadow:
+    inset 6px 6px 12px rgba(0,0,0,0.45),
+    inset -6px -6px 12px rgba(255,255,255,0.05);
+  box-sizing: border-box;
+}
 
+/* ============================
+   OS 切り替え（iOS風トグル）
+============================ */
+#os-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #1F1F1F;
   box-shadow:
     inset 6px 6px 12px rgba(0,0,0,0.45),
     inset -6px -6px 12px rgba(255,255,255,0.05);
 }
 
-/* ============================
-   OS 切り替え（ネオモーフィズム）
-============================ */
-#os-switch {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+#os-switch::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 50%;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #2ECC71, #27AE60);
+  box-shadow:
+    4px 4px 8px rgba(0,0,0,0.5),
+    -4px -4px 8px rgba(255,255,255,0.05);
+  transition: transform 0.25s ease;
+}
+
+#os-switch.iphone::before {
+  transform: translateX(0%);
+}
+
+#os-switch.android::before {
+  transform: translateX(100%);
 }
 
 .os-btn {
   flex: 1;
-  padding: 12px 0;
+  position: relative;
+  z-index: 1;
+  padding: 10px 0;
   border-radius: 999px;
   border: none;
-  background: #1F1F1F;
+  background: transparent;
   color: #A8A8A8;
   cursor: pointer;
-
-  box-shadow:
-    inset 6px 6px 12px rgba(0,0,0,0.45),
-    inset -6px -6px 12px rgba(255,255,255,0.05);
-
-  transition: 0.25s ease;
+  font-size: 0.95rem;
+  transition: color 0.25s ease;
 }
 
 .os-btn.active {
   color: #FFFFFF;
-  box-shadow:
-    6px 6px 12px rgba(0,0,0,0.45),
-    -6px -6px 12px rgba(255,255,255,0.05);
 }
 
 /* ============================
-   コーティング切り替え
+   コーティング切り替え（ネオモーフィズム）
 ============================ */
 #coat-switch {
   display: flex;
@@ -150,11 +178,9 @@ input[type="number"] {
   background: #1F1F1F;
   color: #A8A8A8;
   cursor: pointer;
-
   box-shadow:
     inset 6px 6px 12px rgba(0,0,0,0.45),
     inset -6px -6px 12px rgba(255,255,255,0.05);
-
   transition: 0.25s ease;
 }
 
@@ -165,19 +191,19 @@ input[type="number"] {
     -6px -6px 12px rgba(255,255,255,0.05);
 }
 
-/* ============================
-   コーティング内容切り替え
-============================ */
+/* コーティング内容切り替え */
 .coat-content {
   display: none;
+  opacity: 0;
 }
 
 .coat-content.active {
   display: block;
+  animation: fadeInTab 0.25s ease forwards;
 }
 
 /* ============================
-   見積もりボタン（未来感）
+   見積もりボタン
 ============================ */
 .estimate-btn {
   width: 100%;
@@ -188,11 +214,9 @@ input[type="number"] {
   color: white;
   font-size: 1.1rem;
   cursor: pointer;
-
   box-shadow:
     6px 6px 12px rgba(0,0,0,0.45),
     -6px -6px 12px rgba(255,255,255,0.05);
-
   transition: 0.25s ease;
 }
 
@@ -210,18 +234,21 @@ input[type="number"] {
   padding: 18px;
   border-radius: 16px;
   margin-top: 18px;
-
   box-shadow:
     6px 6px 12px rgba(0,0,0,0.45),
     -6px -6px 12px rgba(255,255,255,0.05);
 }
 
 /* ============================
-   LINE ボタン（グロー）
+   LINE ボタン（固定表示＋グロー）
 ============================ */
 .line-contact {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
   text-align: center;
-  margin: 24px 0;
+  z-index: 100;
 }
 
 .line-btn {
@@ -233,11 +260,9 @@ input[type="number"] {
   font-size: 1rem;
   font-weight: bold;
   text-decoration: none;
-
   box-shadow:
     0 0 12px rgba(6,199,85,0.6),
     0 0 24px rgba(6,199,85,0.4);
-
   transition: 0.25s ease;
 }
 
@@ -248,13 +273,12 @@ input[type="number"] {
 }
 
 /* ============================
-   アコーディオン（セット割）
+   アコーディオン（セット割・スムーズ開閉）
 ============================ */
 .notice-block {
   background: #1F1F1F;
   border-radius: 16px;
   padding: 16px;
-
   box-shadow:
     6px 6px 12px rgba(0,0,0,0.45),
     -6px -6px 12px rgba(255,255,255,0.05);
@@ -266,14 +290,81 @@ input[type="number"] {
   cursor: pointer;
   font-weight: bold;
   color: #EAEAEA;
+  font-size: 0.95rem;
+}
+
+#accordion-icon-glass,
+#accordion-icon-ceramic {
+  transition: transform 0.25s ease;
 }
 
 .price-rules {
-  margin-top: 12px;
+  margin-top: 10px;
   padding-left: 20px;
   color: #A8A8A8;
+  font-size: 0.9rem;
+  list-style: disc;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
+.price-rules.open {
+  max-height: 400px;
+  opacity: 1;
+}
+
+/* 旧 hidden クラスは使わないが互換のため残す */
 .hidden {
   display: none;
+}
+
+/* ============================
+   その他修理タブの見出し
+============================ */
+#tab-other h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+#tab-other h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #EAEAEA;
+}
+
+#tab-other ul {
+  margin: 0 0 6px 18px;
+  padding: 0;
+}
+
+#tab-other li {
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+/* ============================
+   レスポンシブ
+============================ */
+@media (max-width: 480px) {
+  body {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+  }
+
+  .estimate-btn {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  body {
+    max-width: 640px;
+    margin: 0 auto;
+  }
 }
