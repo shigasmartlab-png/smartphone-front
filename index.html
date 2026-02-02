@@ -88,7 +88,25 @@
     </div>
 
     <!-- ガラス -->
-    <div id="coat-glass" class="coat-content active">
+<div id="coat-glass" class="coat-content active">
+
+  <!-- セット割ブロック（ガラス用） -->
+  <div class="form-block notice-block">
+    <div class="accordion-header" onclick="togglePriceRulesGlass()">
+      <span>セット割引の料金体系が自動反映されます</span>
+      <span id="accordion-icon-glass">▼</span>
+    </div>
+
+    <ul id="price-rules-glass" class="price-rules hidden">
+      <li>1台：3,300円</li>
+      <li>2台：5,800円</li>
+      <li>3台：8,000円</li>
+      <li>4〜9台：1台 2,500円</li>
+      <li>10台以上：1台 2,200円</li>
+      <li>学生・シニア：1台 2,000円（片面）</li>
+    </ul>
+  </div>
+
       <div class="form-block">
         <label>台数</label>
         <input type="number" id="glass-count" min="1" value="1">
@@ -116,7 +134,24 @@
     </div>
 
     <!-- セラミック -->
-    <div id="coat-ceramic" class="coat-content">
+<div id="coat-ceramic" class="coat-content">
+
+  <!-- セット割ブロック（セラミック用） -->
+  <div class="form-block notice-block">
+    <div class="accordion-header" onclick="togglePriceRulesCeramic()">
+      <span>セット割引の料金体系が自動反映されます</span>
+      <span id="accordion-icon-ceramic">▼</span>
+    </div>
+
+    <ul id="price-rules-ceramic" class="price-rules hidden">
+      <li>1台：5,500円</li>
+      <li>2台：10,000円</li>
+      <li>3台：9,200円</li>
+      <li>4〜9台：1台 4,500円</li>
+      <li>10台以上：1台 3,500円</li>
+    </ul>
+  </div>
+
       <div class="form-block">
         <label>台数</label>
         <input type="number" id="ceramic-count" min="1" value="1">

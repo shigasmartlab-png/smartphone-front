@@ -259,3 +259,20 @@ async function calcCeramicCoating() {
     <p><strong>合計：¥${data.total.toLocaleString()}</strong></p>
   `;
 }
+
+
+function togglePriceRulesGlass() {
+  const list = document.getElementById("price-rules-glass");
+  const icon = document.getElementById("accordion-icon-glass");
+
+  list.classList.toggle("hidden");
+  icon.style.transform = list.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+}
+
+function togglePriceRulesCeramic() {
+  const list = document.getElementById("price-rules-ceramic");
+  const icon = document.getElementById("accordion-icon-ceramic");
+
+  list.classList.toggle("hidden");
+  icon.style.transform = list.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+}
