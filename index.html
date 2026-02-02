@@ -10,7 +10,9 @@
 
   <h1>スマホ修理・コーティング 見積もり</h1>
 
-  <!-- メインタブ -->
+  <!-- ============================
+       メインタブ
+  ============================ -->
   <div id="main-tabs">
     <button class="main-tab active" data-tab="repair">修理</button>
     <button class="main-tab" data-tab="other">その他修理</button>
@@ -22,7 +24,7 @@
   ============================ -->
   <div id="tab-repair" class="tab-content active">
 
-    <!-- OS 切り替え -->
+    <!-- OS 切り替え（iOS風トグル） -->
     <div id="os-switch">
       <button id="btn-iphone" class="os-btn active">iPhone</button>
       <button id="btn-android" class="os-btn">Android</button>
@@ -66,15 +68,7 @@
     <button onclick="estimate()" class="estimate-btn">見積もりを計算</button>
     <div id="result"></div>
 
-    <!-- ★ 修理タブ：LINEボタン -->
-    <div class="line-contact">
-      <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-        LINEで問い合わせる
-      </a>
-    </div>
-
   </div>
-
 
   <!-- ============================
        その他修理タブ
@@ -83,7 +77,7 @@
 
     <div class="form-block">
       <h2>その他の修理について</h2>
-      <p>画面交換以外の修理は、機種や部品の種類によって価格が大きく異なります。以下は代表的な修理内容と症状の例です。</p>
+      <p>画面交換以外の修理は、機種や部品の種類によって価格が大きく異なります。</p>
     </div>
 
     <div class="form-block">
@@ -103,7 +97,7 @@
         <li>黒い点が映る</li>
         <li>カメラが起動しない</li>
       </ul>
-      <p>→ 機種により部品価格が大きく異なるため、診断後に最適な修理方法と料金をご案内します。</p>
+      <p>→ 診断後に最適な修理方法をご案内します。</p>
     </div>
 
     <div class="form-block">
@@ -112,7 +106,7 @@
         <li>充電ケーブルを挿しても反応しない</li>
         <li>角度を変えないと充電できない</li>
       </ul>
-      <p>→ 軽度ならクリーニングで改善する場合もあります。交換が必要な場合は診断後にお見積もりします。</p>
+      <p>→ 軽度ならクリーニングで改善する場合もあります。</p>
     </div>
 
     <div class="form-block">
@@ -121,18 +115,10 @@
         <li>音が小さい</li>
         <li>ノイズが入る</li>
       </ul>
-      <p>→ 症状に応じてクリーニングまたは部品交換を行います。</p>
-    </div>
-
-    <!-- ★ その他修理タブ：LINEボタン -->
-    <div class="line-contact">
-      <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-        LINEで問い合わせる
-      </a>
+      <p>→ クリーニングまたは部品交換を行います。</p>
     </div>
 
   </div>
-
 
   <!-- ============================
        コーティングタブ
@@ -148,12 +134,12 @@
     <div id="coat-glass" class="coat-content active">
 
       <div class="form-block notice-block">
-        <div class="accordion-header" onclick="togglePriceRulesGlass()">
+        <div class="accordion-header">
           <span>セット割引の料金体系が自動反映されます</span>
           <span id="accordion-icon-glass">▼</span>
         </div>
 
-        <ul id="price-rules-glass" class="price-rules hidden">
+        <ul id="price-rules-glass" class="price-rules">
           <li>1台：3,300円</li>
           <li>2台：5,800円</li>
           <li>3台：8,000円</li>
@@ -188,25 +174,18 @@
       <button onclick="calcGlassCoating()" class="estimate-btn">料金を計算</button>
       <div id="glass-result"></div>
 
-      <!-- ★ ガラスタブ：LINEボタン -->
-      <div class="line-contact">
-        <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-          LINEで問い合わせる
-        </a>
-      </div>
-
     </div>
 
     <!-- セラミック -->
     <div id="coat-ceramic" class="coat-content">
 
       <div class="form-block notice-block">
-        <div class="accordion-header" onclick="togglePriceRulesCeramic()">
+        <div class="accordion-header">
           <span>セット割引の料金体系が自動反映されます</span>
           <span id="accordion-icon-ceramic">▼</span>
         </div>
 
-        <ul id="price-rules-ceramic" class="price-rules hidden">
+        <ul id="price-rules-ceramic" class="price-rules">
           <li>1台：5,500円</li>
           <li>2台：10,000円</li>
           <li>3台：9,200円</li>
@@ -240,15 +219,17 @@
       <button onclick="calcCeramicCoating()" class="estimate-btn">料金を計算</button>
       <div id="ceramic-result"></div>
 
-      <!-- ★ セラミックタブ：LINEボタン -->
-      <div class="line-contact">
-        <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
-          LINEで問い合わせる
-        </a>
-      </div>
-
     </div>
 
+  </div>
+
+  <!-- ============================
+       固定LINEボタン（全ページ共通）
+  ============================ -->
+  <div class="line-contact">
+    <a href="https://lin.ee/cyelYs3" target="_blank" class="line-btn">
+      LINEで問い合わせる
+    </a>
   </div>
 
   <script src="script.js"></script>
