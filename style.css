@@ -368,3 +368,65 @@ input[type="number"] {
     margin: 0 auto;
   }
 }
+
+/* ============================
+   コーティング切り替え（iOS風トグル）
+============================ */
+#coat-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 999px;
+  background: #1F1F1F;
+  margin-bottom: 20px;
+
+  box-shadow:
+    inset 6px 6px 12px rgba(0,0,0,0.45),
+    inset -6px -6px 12px rgba(255,255,255,0.05);
+}
+
+/* ノブ（スライドする白い丸） */
+#coat-switch::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 50%;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #2ECC71, #27AE60);
+  box-shadow:
+    4px 4px 8px rgba(0,0,0,0.5),
+    -4px -4px 8px rgba(255,255,255,0.05);
+  transition: transform 0.25s ease;
+}
+
+/* ガラス側 */
+#coat-switch.glass::before {
+  transform: translateX(0%);
+}
+
+/* セラミック側 */
+#coat-switch.ceramic::before {
+  transform: translateX(100%);
+}
+
+/* ボタン（文字部分） */
+.coat-btn {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  padding: 10px 0;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #A8A8A8;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: color 0.25s ease;
+}
+
+/* 選択中の文字を白に */
+.coat-btn.active {
+  color: #FFFFFF;
+}

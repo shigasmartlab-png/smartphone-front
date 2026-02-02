@@ -30,25 +30,36 @@ function setupMainTabs() {
 }
 
 /* ============================================================
-   コーティングタブ切り替え（フェード対応）
+   コーティングタブ切り替え（iOS風トグル）
 ============================================================ */
 function setupCoatTabs() {
+  const coatSwitch = document.getElementById("coat-switch");
   const coatButtons = document.querySelectorAll(".coat-btn");
   const coatContents = document.querySelectorAll(".coat-content");
 
+  // 初期状態
+  coatSwitch.classList.add("glass");
+
   coatButtons.forEach(btn => {
     btn.onclick = () => {
+      const target = btn.dataset.coat; // "glass" or "ceramic"
+
+      // ボタンの active 切り替え
       coatButtons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
-      const tab = btn.dataset.coat;
+      // トグルノブの位置変更
+      coatSwitch.classList.remove("glass", "ceramic");
+      coatSwitch.classList.add(target);
 
+      // コンテンツ切り替え
       coatContents.forEach(c => c.classList.remove("active"));
-      const target = document.getElementById(`coat-${tab}`);
-      if (target) target.classList.add("active");
+      const content = document.getElementById(`coat-${target}`);
+      if (content) content.classList.add("active");
     };
   });
 }
+
 
 /* ============================================================
    API ベース URL
