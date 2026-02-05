@@ -389,3 +389,18 @@ function toggleAccordion(listEl, iconEl) {
     iconEl.style.transform = "rotate(180deg)";
   }
 }
+
+
+/* ============================================================
+   Googleカレンダー（Instagram対策：ランダム値でキャッシュ破壊）
+============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  const frame = document.getElementById("calendar-frame");
+  if (frame) {
+    const random = Math.random().toString(36).substring(2, 10);
+
+    frame.src =
+      "https://calendar.google.com/calendar/embed?src=cdd93d0c66eac54851211596d3287f5d17152e3a7d6b86c74a98396f4f124ff1%40group.calendar.google.com&ctz=Asia%2FTokyo&v=" +
+      random;
+  }
+});
