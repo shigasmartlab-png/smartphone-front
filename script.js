@@ -392,7 +392,7 @@ function toggleAccordion(listEl, iconEl) {
 
 
 /* ============================================================
-   ICS → 1か月タイムライン（Instagram対応・完全版）
+   ICS → 1か月タイムライン（Instagram対応・完全版／修正版）
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   const timelineEl = document.getElementById("calendar-timeline");
@@ -432,11 +432,33 @@ async function fetchICS(url) {
 }
 
 /* ============================================================
+   ICS 行の折り返しを完全に結合
+============================================================ */
+function unfoldICS(text) {
+  const lines = text.split(/\r?\n/);
+  const unfolded = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // 次の行がスペース or タブで始まる → 折り返し行
+    while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
+      line += lines[i + 1].slice(1); // 先頭のスペースを除いて結合
+      i++;
+    }
+
+    unfolded.push(line);
+  }
+
+  return unfolded.join("\n");
+}
+
+/* ============================================================
    ICS パーサー（折り返し行 / 改行 / 日本時間対応）
 ============================================================ */
 function parseICS(text) {
-  // 行の折り返し（スペース始まり）を結合
-  text = text.replace(/\r?\n[ \t]/g, "");
+  // 折り返し行を完全に結合
+  text = unfoldICS(text);
 
   const lines = text.split(/\r?\n/);
   const events = [];
