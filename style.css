@@ -508,17 +508,31 @@ input[type="number"] {
   font-size: 0.8rem;
 }
 
-.calendar-reload-btn {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: #eee;
-  border-radius: 6px;
+/* ============================
+   再読み込みボタン（ダーク × ネオモーフィズム）
+============================ */
+#calendar-reload {
+  margin-top: 16px;
+  padding: 12px 0;
+  border-radius: 12px;
+  background: #1F1F1F;
+  color: #EAEAEA;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   user-select: none;
+
+  box-shadow:
+    6px 6px 12px rgba(0,0,0,0.45),
+    -6px -6px 12px rgba(255,255,255,0.05);
+
+  transition: 0.25s ease;
 }
 
-.calendar-reload-btn:active {
-  opacity: 0.6;
+#calendar-reload:active {
+  box-shadow:
+    inset 6px 6px 12px rgba(0,0,0,0.45),
+    inset -6px -6px 12px rgba(255,255,255,0.05);
+  opacity: 0.8;
 }
