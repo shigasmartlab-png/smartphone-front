@@ -402,22 +402,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const GAS_URL =
     "https://script.google.com/macros/s/AKfycbz90K4zuxXzS_LM24sMx5-Dc_I7BhKomfF1YRJTS8uXSLnZXugRd-lx1GLL2PrTCA/exec";
 
-  fetchICS(GAS_URL)
-    .then(text => {
-      const events = parseICS(text);
+fetch(GAS_URL)
+  .then(res => res.json())   // JSON として受け取る
+  .then(events => {
+    const now = new Date();
+    const oneMonthLater = new Date();
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
 
-      const now = new Date();
-      const oneMonthLater = new Date();
-      oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    const filtered = events.filter(
+      ev => new Date(ev.start) >= startOfDay(now) &&
+            new Date(ev.start) <= oneMonthLater
+    );
 
-      const filtered = events.filter(
-        ev => ev.start >= startOfDay(now) && ev.start <= oneMonthLater
-      );
+    const grouped = groupByDate(
+      filtered.map(ev => ({
+        start: new Date(ev.start),
+        end: new Date(ev.end),
+        summary: ev.summary
+      }))
+    );
 
-      const grouped = groupByDate(filtered);
+    renderTimeline(grouped, timelineEl);
+  })
 
-      renderTimeline(grouped, timelineEl);
-    })
     .catch(err => {
       console.error(err);
       timelineEl.innerHTML = "<p>カレンダーの読み込みに失敗しました。</p>";
