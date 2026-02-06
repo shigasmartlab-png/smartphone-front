@@ -561,26 +561,32 @@ function renderTimeline(grouped, el) {
     title.textContent = formatDateLabel(key);
     dayBox.appendChild(title);
 
-    grouped[key].forEach(ev => {
-      const slot = document.createElement("div");
-      slot.className = "calendar-slot busy";
+    const date = new Date(key);
+    const slots = generateThreeHourSlots(date);
+
+    slots.forEach(slot => {
+      const status = getSlotStatus(slot, grouped[key]);
+
+      const slotEl = document.createElement("div");
+      slotEl.className = "calendar-slot " + status;
 
       const time = document.createElement("div");
       time.className = "calendar-slot-time";
-      time.textContent = `${formatTime(ev.start)} 〜 ${formatTime(ev.end)}`;
+      time.textContent = `${formatTime(slot.start)} 〜 ${formatTime(slot.end)}`;
 
       const label = document.createElement("div");
       label.className = "calendar-slot-label";
-      label.textContent = ev.summary || "予約あり";
+      label.textContent = status === "busy" ? "予約あり" : "空き";
 
-      slot.appendChild(time);
-      slot.appendChild(label);
-      dayBox.appendChild(slot);
+      slotEl.appendChild(time);
+      slotEl.appendChild(label);
+      dayBox.appendChild(slotEl);
     });
 
     el.appendChild(dayBox);
   });
 }
+
 
 /* ============================================================
    日付・時間フォーマット
