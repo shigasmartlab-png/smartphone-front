@@ -507,3 +507,18 @@ input[type="number"] {
 .calendar-slot-label {
   font-size: 0.8rem;
 }
+
+.calendar-reload-btn {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #eee;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.calendar-reload-btn:active {
+  opacity: 0.6;
+}

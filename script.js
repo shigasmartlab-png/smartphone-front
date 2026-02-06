@@ -392,134 +392,62 @@ function toggleAccordion(listEl, iconEl) {
 
 
 /* ============================================================
-   ICS → 1か月タイムライン（Instagram対応・完全版／修正版）
+   ICS → 1か月タイムライン（Instagram対応・完全版）
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   const timelineEl = document.getElementById("calendar-timeline");
+  const reloadBtn = document.getElementById("calendar-reload");
   if (!timelineEl) return;
 
-  // ★ ここを GAS の URL に変更（文字列で渡す）
   const GAS_URL =
     "https://script.google.com/macros/s/AKfycbz90K4zuxXzS_LM24sMx5-Dc_I7BhKomfF1YRJTS8uXSLnZXugRd-lx1GLL2PrTCA/exec";
 
-fetch(GAS_URL)
-  .then(res => res.json())   // JSON として受け取る
-  .then(events => {
-    const now = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+  /* ------------------------------
+      カレンダー読み込み処理
+  ------------------------------ */
+  function loadCalendar() {
+    timelineEl.innerHTML = "<p>読み込み中...</p>";
 
-    const filtered = events.filter(
-      ev => new Date(ev.start) >= startOfDay(now) &&
-            new Date(ev.start) <= oneMonthLater
-    );
+    fetch(GAS_URL)
+      .then(res => res.json())
+      .then(events => {
+        const now = new Date();
+        const oneMonthLater = new Date();
+        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
 
-    const grouped = groupByDate(
-      filtered.map(ev => ({
-        start: new Date(ev.start),
-        end: new Date(ev.end),
-        summary: ev.summary
-      }))
-    );
+        // 期間内の予定だけ抽出
+        const filtered = events.filter(ev => {
+          const st = new Date(ev.start);
+          return st >= startOfDay(now) && st <= oneMonthLater;
+        });
 
-    renderTimeline(grouped, timelineEl);
-  })
+        // 日付ごとにグループ化
+        const grouped = groupByDate(
+          filtered.map(ev => ({
+            start: new Date(ev.start),
+            end: new Date(ev.end),
+            summary: ev.summary
+          }))
+        );
 
-    .catch(err => {
-      console.error(err);
-      timelineEl.innerHTML = "<p>カレンダーの読み込みに失敗しました。</p>";
+        renderTimeline(grouped, timelineEl);
+      })
+      .catch(err => {
+        console.error(err);
+        timelineEl.innerHTML = "<p>カレンダーの読み込みに失敗しました。</p>";
+      });
+  }
+
+  // 初回読み込み
+  loadCalendar();
+
+  // 再読み込みボタン
+  if (reloadBtn) {
+    reloadBtn.addEventListener("click", () => {
+      loadCalendar();
     });
+  }
 });
-
-
-/* ============================================================
-   ICS を取得（改行・折り返し対応）
-============================================================ */
-async function fetchICS(url) {
-  const res = await fetch(url + "?nocache=" + Math.random());
-  return await res.text();
-}
-
-/* ============================================================
-   ICS 行の折り返しを完全に結合（folding対応）
-============================================================ */
-function unfoldICS(text) {
-  const lines = text.split(/\r?\n/);
-  const unfolded = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-
-    // 次の行がスペース or タブで始まる → 折り返し行
-    while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
-      line += lines[i + 1].slice(1); // 先頭のスペースを除いて結合
-      i++;
-    }
-
-    unfolded.push(line);
-  }
-
-  return unfolded.join("\n");
-}
-
-/* ============================================================
-   ICS パーサー（折り返し行 / 改行 / 日本時間対応）
-============================================================ */
-function parseICS(text) {
-  // 折り返し行を完全に結合
-  text = unfoldICS(text);
-
-  const lines = text.split(/\r?\n/);
-  const events = [];
-  let current = null;
-
-  for (const line of lines) {
-    if (line === "BEGIN:VEVENT") {
-      current = {};
-    } else if (line === "END:VEVENT") {
-      if (current.start && current.end) events.push(current);
-      current = null;
-    } else if (current) {
-      if (line.startsWith("DTSTART")) {
-        current.start = parseICSDate(line.split(":")[1]);
-      } else if (line.startsWith("DTEND")) {
-        current.end = parseICSDate(line.split(":")[1]);
-      } else if (line.startsWith("SUMMARY")) {
-        current.summary = decodeICS(line.split(":").slice(1).join(":"));
-      }
-    }
-  }
-
-  return events;
-}
-
-function parseICSDate(v) {
-  const m = v.match(
-    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z)?/
-  );
-  if (!m) return new Date();
-
-  const year = Number(m[1]);
-  const month = Number(m[2]) - 1;
-  const day = Number(m[3]);
-  const hour = Number(m[4]);
-  const min = Number(m[5]);
-  const sec = Number(m[6]);
-
-  if (m[7] === "Z") {
-    // UTC → 日本時間
-    return new Date(Date.UTC(year, month, day, hour, min, sec));
-  } else {
-    return new Date(year, month, day, hour, min, sec);
-  }
-}
-
-function decodeICS(str) {
-  return str
-    .replace(/\\,/g, ",")
-    .replace(/\\n/g, "\n")
-    .replace(/\\;/g, ";");
-}
 
 /* ============================================================
    日付ごとにグループ化
@@ -533,15 +461,54 @@ function groupByDate(events) {
     map[key].push(ev);
   });
 
-  Object.keys(map).forEach(key => {
-    map[key].sort((a, b) => a.start - b.start);
-  });
-
   return map;
 }
 
 /* ============================================================
-   タイムライン描画（1か月分）
+   3時間枠生成
+============================================================ */
+function generateThreeHourSlots(date, openHour = 10, closeHour = 19) {
+  const slots = [];
+  for (let h = openHour; h < closeHour; h += 3) {
+    const start = new Date(date);
+    start.setHours(h, 0, 0, 0);
+
+    const end = new Date(date);
+    end.setHours(Math.min(h + 3, closeHour), 0, 0, 0);
+
+    slots.push({ start, end });
+  }
+  return slots;
+}
+
+/* ============================================================
+   予約/空き判定
+============================================================ */
+function classifyEvent(ev) {
+  const s = ev.summary || "";
+  if (s.includes("〇")) return "free"; // 空き
+  return "busy"; // 予約扱い
+}
+
+/* ============================================================
+   枠と予定の重なり判定
+============================================================ */
+function getSlotStatus(slot, events) {
+  const overlapped = events.filter(ev =>
+    ev.start < slot.end && ev.end > slot.start
+  );
+
+  if (overlapped.length === 0) return "free";
+
+  if (overlapped.some(ev => classifyEvent(ev) === "busy")) {
+    return "busy";
+  }
+
+  return "free";
+}
+
+/* ============================================================
+   タイムライン描画（3時間枠対応）
 ============================================================ */
 function renderTimeline(grouped, el) {
   el.innerHTML = "";
@@ -586,7 +553,6 @@ function renderTimeline(grouped, el) {
     el.appendChild(dayBox);
   });
 }
-
 
 /* ============================================================
    日付・時間フォーマット
