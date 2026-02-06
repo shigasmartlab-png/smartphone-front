@@ -486,9 +486,15 @@ function generateThreeHourSlots(date, openHour = 10, closeHour = 19) {
 ============================================================ */
 function classifyEvent(ev) {
   const s = ev.summary || "";
-  if (s.includes("〇")) return "free"; // 空き
-  return "busy"; // 予約扱い
+
+  // 空き扱いにしたいキーワード
+  if (s.includes("〇")) return "free";
+  if (s.includes("要相談")) return "free";
+
+  // それ以外は予約扱い
+  return "busy";
 }
+
 
 /* ============================================================
    枠と予定の重なり判定
