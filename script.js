@@ -398,10 +398,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const timelineEl = document.getElementById("calendar-timeline");
   if (!timelineEl) return;
 
-  const ICS_URL =
-    "https://calendar.google.com/calendar/ical/cdd93d0c66eac54851211596d3287f5d17152e3a7d6b86c74a98396f4f124ff1%40group.calendar.google.com/public/basic.ics";
+  // ★ ここを GAS の URL に変更（文字列で渡す）
+  const GAS_URL =
+    "https://script.google.com/macros/s/AKfycbz90K4zuxXzS_LM24sMx5-Dc_I7BhKomfF1YRJTS8uXSLnZXugRd-lx1GLL2PrTCA/exec";
 
-  fetchICS(ICS_URL)
+  fetchICS(GAS_URL)
     .then(text => {
       const events = parseICS(text);
 
@@ -422,6 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
       timelineEl.innerHTML = "<p>カレンダーの読み込みに失敗しました。</p>";
     });
 });
+
 
 /* ============================================================
    ICS を取得（改行・折り返し対応）
