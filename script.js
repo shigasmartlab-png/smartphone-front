@@ -392,91 +392,30 @@ function toggleAccordion(listEl, iconEl) {
 
 
 /* ============================================================
-   Googleカレンダー（Instagram対策：ランダム値でキャッシュ破壊）
-============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  const frame = document.getElementById("calendar-frame");
-  if (frame) {
-    const random = Math.random().toString(36).substring(2, 10);
-
-    frame.src =
-      "https://calendar.google.com/calendar/embed?src=cdd93d0c66eac54851211596d3287f5d17152e3a7d6b86c74a98396f4f124ff1%40group.calendar.google.com&ctz=Asia%2FTokyo&v=" +
-      random;
-  }
-});
-
-/* ============================================================
-   ICS から 1か月分の空き状況タイムライン生成
-   - 予約が入っている時間帯を「埋まり」として表示
-   - それ以外の時間帯を「空き」として補完することも可能だが、
-     まずは「予約が入っている時間帯のタイムライン」を出す版
+   ICS → 1か月タイムライン（Instagram対応・完全版）
 ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   const timelineEl = document.getElementById("calendar-timeline");
   if (!timelineEl) return;
 
-  const ICS_URL = "https://calendar.google.com/calendar/ical/cdd93d0c66eac54851211596d3287f5d17152e3a7d6b86c74a98396f4f124ff1%40group.calendar.google.com/public/basic.ics";
+  const ICS_URL =
+    "https://calendar.google.com/calendar/ical/cdd93d0c66eac54851211596d3287f5d17152e3a7d6b86c74a98396f4f124ff1%40group.calendar.google.com/public/basic.ics";
 
-  fetch(ICS_URL)
-    .then(res => res.text())
+  fetchICS(ICS_URL)
     .then(text => {
       const events = parseICS(text);
+
       const now = new Date();
       const oneMonthLater = new Date();
       oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
 
-      // 1か月分に絞る
-      const filtered = events.filter(ev => ev.start >= startOfDay(now) && ev.start <= oneMonthLater);
+      const filtered = events.filter(
+        ev => ev.start >= startOfDay(now) && ev.start <= oneMonthLater
+      );
 
-      // 日付ごとにグルーピング
-      const byDate = {};
-      filtered.forEach(ev => {
-        const key = formatDateKey(ev.start);
-        if (!byDate[key]) byDate[key] = [];
-        byDate[key].push(ev);
-      });
+      const grouped = groupByDate(filtered);
 
-      // 日付ごとにソート
-      Object.keys(byDate).forEach(key => {
-        byDate[key].sort((a, b) => a.start - b.start);
-      });
-
-      // 描画
-      timelineEl.innerHTML = "";
-      const dateKeys = Object.keys(byDate).sort();
-      if (dateKeys.length === 0) {
-        timelineEl.innerHTML = "<p>今後1か月の予約は登録されていません。</p>";
-        return;
-      }
-
-      dateKeys.forEach(key => {
-        const dayBox = document.createElement("div");
-        dayBox.className = "calendar-day";
-
-        const title = document.createElement("div");
-        title.className = "calendar-day-title";
-        title.textContent = formatDateLabel(key);
-        dayBox.appendChild(title);
-
-        byDate[key].forEach(ev => {
-          const slot = document.createElement("div");
-          slot.className = "calendar-slot busy";
-
-          const time = document.createElement("div");
-          time.className = "calendar-slot-time";
-          time.textContent = `${formatTime(ev.start)} 〜 ${formatTime(ev.end)}`;
-
-          const label = document.createElement("div");
-          label.className = "calendar-slot-label";
-          label.textContent = ev.summary || "予約あり";
-
-          slot.appendChild(time);
-          slot.appendChild(label);
-          dayBox.appendChild(slot);
-        });
-
-        timelineEl.appendChild(dayBox);
-      });
+      renderTimeline(grouped, timelineEl);
     })
     .catch(err => {
       console.error(err);
@@ -484,44 +423,51 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-/* ----------------------------
-   ICS パーサー（超シンプル版）
----------------------------- */
-function parseICS(text) {
-  const events = [];
-  const lines = text.split(/\r?\n/);
+/* ============================================================
+   ICS を取得（改行・折り返し対応）
+============================================================ */
+async function fetchICS(url) {
+  const res = await fetch(url + "?nocache=" + Math.random());
+  return await res.text();
+}
 
+/* ============================================================
+   ICS パーサー（折り返し行 / 改行 / 日本時間対応）
+============================================================ */
+function parseICS(text) {
+  // 行の折り返し（スペース始まり）を結合
+  text = text.replace(/\r?\n[ \t]/g, "");
+
+  const lines = text.split(/\r?\n/);
+  const events = [];
   let current = null;
 
-  lines.forEach(line => {
-    if (line.startsWith("BEGIN:VEVENT")) {
+  for (const line of lines) {
+    if (line === "BEGIN:VEVENT") {
       current = {};
-    } else if (line.startsWith("END:VEVENT")) {
-      if (current && current.start && current.end) {
-        events.push(current);
-      }
+    } else if (line === "END:VEVENT") {
+      if (current.start && current.end) events.push(current);
       current = null;
     } else if (current) {
       if (line.startsWith("DTSTART")) {
-        const value = line.split(":")[1];
-        current.start = parseICSDate(value);
+        current.start = parseICSDate(line.split(":")[1]);
       } else if (line.startsWith("DTEND")) {
-        const value = line.split(":")[1];
-        current.end = parseICSDate(value);
+        current.end = parseICSDate(line.split(":")[1]);
       } else if (line.startsWith("SUMMARY")) {
-        const value = line.split(":").slice(1).join(":");
-        current.summary = decodeICS(value);
+        current.summary = decodeICS(line.split(":").slice(1).join(":"));
       }
     }
-  });
+  }
 
   return events;
 }
 
 function parseICSDate(v) {
-  // 例: 20260206T100000Z or 20260206T100000
-  const m = v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/);
+  const m = v.match(
+    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z)?/
+  );
   if (!m) return new Date();
+
   const year = Number(m[1]);
   const month = Number(m[2]) - 1;
   const day = Number(m[3]);
@@ -529,8 +475,8 @@ function parseICSDate(v) {
   const min = Number(m[5]);
   const sec = Number(m[6]);
 
-  // Z付きならUTCとして扱い、日本時間に変換
-  if (v.endsWith("Z")) {
+  if (m[7] === "Z") {
+    // UTC → 日本時間
     return new Date(Date.UTC(year, month, day, hour, min, sec));
   } else {
     return new Date(year, month, day, hour, min, sec);
@@ -538,9 +484,76 @@ function parseICSDate(v) {
 }
 
 function decodeICS(str) {
-  return str.replace(/\\,/g, ",").replace(/\\n/g, "\n").replace(/\\;/g, ";");
+  return str
+    .replace(/\\,/g, ",")
+    .replace(/\\n/g, "\n")
+    .replace(/\\;/g, ";");
 }
 
+/* ============================================================
+   日付ごとにグループ化
+============================================================ */
+function groupByDate(events) {
+  const map = {};
+
+  events.forEach(ev => {
+    const key = formatDateKey(ev.start);
+    if (!map[key]) map[key] = [];
+    map[key].push(ev);
+  });
+
+  Object.keys(map).forEach(key => {
+    map[key].sort((a, b) => a.start - b.start);
+  });
+
+  return map;
+}
+
+/* ============================================================
+   タイムライン描画（1か月分）
+============================================================ */
+function renderTimeline(grouped, el) {
+  el.innerHTML = "";
+
+  const keys = Object.keys(grouped).sort();
+  if (keys.length === 0) {
+    el.innerHTML = "<p>今後1か月の予約は登録されていません。</p>";
+    return;
+  }
+
+  keys.forEach(key => {
+    const dayBox = document.createElement("div");
+    dayBox.className = "calendar-day";
+
+    const title = document.createElement("div");
+    title.className = "calendar-day-title";
+    title.textContent = formatDateLabel(key);
+    dayBox.appendChild(title);
+
+    grouped[key].forEach(ev => {
+      const slot = document.createElement("div");
+      slot.className = "calendar-slot busy";
+
+      const time = document.createElement("div");
+      time.className = "calendar-slot-time";
+      time.textContent = `${formatTime(ev.start)} 〜 ${formatTime(ev.end)}`;
+
+      const label = document.createElement("div");
+      label.className = "calendar-slot-label";
+      label.textContent = ev.summary || "予約あり";
+
+      slot.appendChild(time);
+      slot.appendChild(label);
+      dayBox.appendChild(slot);
+    });
+
+    el.appendChild(dayBox);
+  });
+}
+
+/* ============================================================
+   日付・時間フォーマット
+============================================================ */
 function startOfDay(d) {
   const nd = new Date(d);
   nd.setHours(0, 0, 0, 0);
