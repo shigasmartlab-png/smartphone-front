@@ -462,15 +462,48 @@ input[type="number"] {
 }
 
 /* ============================
-   空き状況カレンダー
+   空き状況タイムライン
 ============================ */
-.calendar-wrapper {
+.calendar-day {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 12px;
   background: #1F1F1F;
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 20px;
-
   box-shadow:
-    6px 6px 12px rgba(0,0,0,0.45),
-    -6px -6px 12px rgba(255,255,255,0.05);
+    4px 4px 8px rgba(0,0,0,0.45),
+    -4px -4px 8px rgba(255,255,255,0.05);
+}
+
+.calendar-day-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #FFFFFF;
+}
+
+.calendar-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.calendar-slot.busy {
+  background: rgba(231, 76, 60, 0.18);
+  color: #F1948A;
+}
+
+.calendar-slot.free {
+  background: rgba(46, 204, 113, 0.16);
+  color: #82E0AA;
+}
+
+.calendar-slot-time {
+  font-weight: 500;
+}
+
+.calendar-slot-label {
+  font-size: 0.8rem;
 }
