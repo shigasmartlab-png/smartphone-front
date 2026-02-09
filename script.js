@@ -92,20 +92,24 @@ const areas = {
    出張費計算
    出張費 = ((片道距離×2)/14km) × ガソリン単価 + extra
 ============================================================ */
-function calcTravelFee(areaName, gasPrice = 170) {
+function calcTravelFee(areaName, gasPrice = 150) {
   const area = areas[areaName];
   if (!area) return 0;
 
-  const distance = area.distance;
+  const distance = area.distance; // 片道
   const roundTrip = distance * 2;
 
-  const fuel = roundTrip / 14; // 燃費 14km/L
+  const fuel = roundTrip / 14; // 燃費 13km/L
   let fee = fuel * gasPrice;
 
   if (area.extra) fee += area.extra;
 
-  return Math.round(fee);
+  // ★ 100円未満を切り上げ（例：571 → 600）
+  fee = Math.ceil(fee / 100) * 100;
+
+  return fee;
 }
+
 
 /* ============================================================
    出張対応 UI（チェックで地域プルダウン表示）
