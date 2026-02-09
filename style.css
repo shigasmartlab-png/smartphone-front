@@ -536,3 +536,8 @@ input[type="number"] {
     inset -6px -6px 12px rgba(255,255,255,0.05);
   opacity: 0.8;
 }
+
+
+#travel-area {
+  margin-top: 10px;
+}

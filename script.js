@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupCoatTabs();
   setupOsSwitch();
   setupAccordions();
+　setupTravelOptions();
 });
+
 
 /* ============================================================
    メインタブ切り替え（フェード対応）
@@ -57,6 +59,65 @@ function setupCoatTabs() {
       const content = document.getElementById(`coat-${target}`);
       if (content) content.classList.add("active");
     };
+  });
+}
+
+/* ============================================================
+   出張対応エリア（片道距離 + 追加料金）
+============================================================ */
+const areas = {
+  "湖南市": { distance: 13.5 },
+  "日野町": { distance: 15.5 },
+  "竜王町": { distance: 20 },
+  "守山市": { distance: 25 },
+  "草津市": { distance: 27.5 },
+  "栗東市": { distance: 23 },
+  "野洲市": { distance: 23.5 },
+  "東近江市": { distance: 27 },
+  "近江八幡市": { distance: 28 },
+  "愛荘町": { distance: 35 },
+  "大津市南部（瀬田周辺）": { distance: 30 },
+  "大津市北部（堅田周辺）": { distance: 37, extra: 150 },
+  "大津市中部（市街地）": { distance: 39 },
+  "甲良町": { distance: 38.5 },
+  "豊郷町": { distance: 39 },
+  "多賀町": { distance: 40 },
+  "彦根市": { distance: 48 },
+  "米原市": { distance: 55 },
+  "長浜市": { distance: 62 },
+  "高島市": { distance: 70, extra: 150 }
+};
+
+/* ============================================================
+   出張費計算
+   出張費 = ((片道距離×2)/14km) × ガソリン単価 + extra
+============================================================ */
+function calcTravelFee(areaName, gasPrice = 170) {
+  const area = areas[areaName];
+  if (!area) return 0;
+
+  const distance = area.distance;
+  const roundTrip = distance * 2;
+
+  const fuel = roundTrip / 14; // 燃費 14km/L
+  let fee = fuel * gasPrice;
+
+  if (area.extra) fee += area.extra;
+
+  return Math.round(fee);
+}
+
+/* ============================================================
+   出張対応 UI（チェックで地域プルダウン表示）
+============================================================ */
+function setupTravelOptions() {
+  const travelCheck = document.getElementById("travel-check");
+  const travelArea = document.getElementById("travel-area");
+
+  if (!travelCheck || !travelArea) return;
+
+  travelCheck.addEventListener("change", () => {
+    travelArea.style.display = travelCheck.checked ? "block" : "none";
   });
 }
 
@@ -295,7 +356,20 @@ async function estimate() {
     html += `</ul>`;
   }
 
-  html += `<p><strong>合計:</strong> <span style="font-size:1.2em;">¥${data.total.toLocaleString()}</span></p>`;
+/* ▼ 出張費の取得 */
+const travelCheck = document.getElementById("travel-check");
+const travelArea = document.getElementById("travel-area");
+
+let travelFee = 0;
+if (travelCheck && travelCheck.checked && travelArea && travelArea.value) {
+  travelFee = calcTravelFee(travelArea.value);
+}
+
+/* ▼ 合計に出張費を加算 */
+const finalTotal = data.total + travelFee;
+
+html += `<p><strong>出張費:</strong> ¥${travelFee.toLocaleString()}</p>`;
+html += `<p><strong>合計:</strong> <span style="font-size:1.2em;">¥${finalTotal.toLocaleString()}</span></p>`;
 
   resultArea.innerHTML = html;
 }
@@ -320,11 +394,24 @@ async function calcGlassCoating() {
   const res = await fetch(`${API_BASE}/coating/glass?${params.toString()}`);
   const data = await res.json();
 
-  resultEl.innerHTML = `
-    <h2>ガラスコーティング見積もり</h2>
-    <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
-    <p><strong>合計：¥${data.total.toLocaleString()}</strong></p>
-  `;
+/* ▼ 出張費 */
+const travelCheck = document.getElementById("travel-check");
+const travelArea = document.getElementById("travel-area");
+
+let travelFee = 0;
+if (travelCheck && travelCheck.checked && travelArea && travelArea.value) {
+  travelFee = calcTravelFee(travelArea.value);
+}
+
+const finalTotal = data.total + travelFee;
+
+resultEl.innerHTML = `
+  <h2>ガラスコーティング見積もり</h2>
+  <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
+  <p>出張費：¥${travelFee.toLocaleString()}</p>
+  <p><strong>合計：¥${finalTotal.toLocaleString()}</strong></p>
+`;
+
 }
 
 /* ============================================================
@@ -347,11 +434,24 @@ async function calcCeramicCoating() {
   const res = await fetch(`${API_BASE}/coating/ceramic?${params.toString()}`);
   const data = await res.json();
 
-  resultEl.innerHTML = `
-    <h2>セラミックコーティング見積もり</h2>
-    <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
-    <p><strong>合計：¥${data.total.toLocaleString()}</strong></p>
-  `;
+/* ▼ 出張費 */
+const travelCheck = document.getElementById("travel-check");
+const travelArea = document.getElementById("travel-area");
+
+let travelFee = 0;
+if (travelCheck && travelCheck.checked && travelArea && travelArea.value) {
+  travelFee = calcTravelFee(travelArea.value);
+}
+
+const finalTotal = data.total + travelFee;
+
+resultEl.innerHTML = `
+  <h2>セラミックコーティング見積もり</h2>
+  <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
+  <p>出張費：¥${travelFee.toLocaleString()}</p>
+  <p><strong>合計：¥${finalTotal.toLocaleString()}</strong></p>
+`;
+
 }
 
 /* ============================================================
