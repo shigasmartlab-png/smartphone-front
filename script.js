@@ -591,9 +591,14 @@ function generateThreeHourSlots(date, openHour = 9, closeHour = 21) {
 function classifyEvent(ev) {
   const s = ev.summary || "";
 
+  // 予約扱い
   if (s.includes("×")) return "busy";
   if (s.includes("予約済")) return "busy";
 
+  // 〇 は空き扱い
+  if (s.includes("〇")) return "free";
+
+  // その他（メモなど）も free 扱い
   return "free";
 }
 
