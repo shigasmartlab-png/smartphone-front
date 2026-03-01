@@ -656,7 +656,7 @@ function renderTimeline(grouped, el) {
 
       const label = document.createElement("div");
       label.className = "calendar-slot-label";
-      label.textContent = status === "busy" ? "予約あり" : "空き";
+      label.textContent = status === "busy" ? "予約済" : "空き";
 
       slotEl.appendChild(time);
       slotEl.appendChild(label);
