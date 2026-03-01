@@ -571,7 +571,7 @@ function groupByDate(events) {
 /* ============================================================
    3時間枠生成
 ============================================================ */
-function generateThreeHourSlots(date, openHour = 10, closeHour = 19) {
+function generateThreeHourSlots(date, openHour = 9, closeHour = 21) {
   const slots = [];
   for (let h = openHour; h < closeHour; h += 3) {
     const start = new Date(date);
@@ -591,12 +591,10 @@ function generateThreeHourSlots(date, openHour = 10, closeHour = 19) {
 function classifyEvent(ev) {
   const s = ev.summary || "";
 
-  // 空き扱いにしたいキーワード
-  if (s.includes("〇")) return "free";
-  if (s.includes("要相談")) return "free";
+  if (s.includes("×")) return "busy";
+  if (s.includes("予約済")) return "busy";
 
-  // それ以外は予約扱い
-  return "busy";
+  return "free";
 }
 
 
