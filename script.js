@@ -92,7 +92,7 @@ const areas = {
    出張費計算
    出張費 = ((片道距離×2)/14km) × ガソリン単価 + extra
 ============================================================ */
-function calcTravelFee(areaName, gasPrice = 150) {
+function calcTravelFee(areaName, gasPrice = 180) {
   const area = areas[areaName];
   if (!area) return 0;
 
