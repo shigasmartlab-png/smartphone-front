@@ -9,6 +9,7 @@ const AVAILABILITY_API =
 
 let currentOS = "iPhone";
 let currentRepairs = [];
+const LARGE_CAPACITY_EXTRA = 1500;
 
 /* ==========================================
    出張設定
@@ -135,6 +136,13 @@ async function loadModels() {
   const repair = document.getElementById("repair_type");
   const button = document.getElementById("repair-estimate-btn");
   const detail = document.getElementById("repair-detail");
+   const batteryOption =
+     document.getElementById("battery-capacity-option");
+   const batteryCheck =
+     document.getElementById("battery-capacity-check");
+
+batteryOption.classList.add("hidden");
+batteryCheck.checked = false;
 
   model.disabled = true;
   repair.disabled = true;
@@ -343,6 +351,13 @@ function handleRepairSelection() {
     detail.appendChild(note);
   }
 
+const repairName =
+  `${item.name || ""} ${item.category || ""} ${item.part || ""}`;
+
+if (repairName.includes("バッテリー")) {
+  batteryOption.classList.remove("hidden");
+}
+   
   detail.classList.remove("hidden");
   button.disabled = false;
 }
@@ -379,8 +394,18 @@ function showRepairEstimate() {
     travelFee = calculateTravelFee(travelArea.value);
   }
 
-  const repairPrice = Number(item.price) || 0;
-  const total = repairPrice + travelFee;
+const repairPrice = Number(item.price) || 0;
+
+const largeCapacity =
+  document.getElementById("battery-capacity-check").checked;
+
+const largeCapacityFee =
+  largeCapacity ? LARGE_CAPACITY_EXTRA : 0;
+
+const total =
+  repairPrice +
+  largeCapacityFee +
+  travelFee;
 
   renderResult(
     "result",
@@ -396,6 +421,9 @@ function showRepairEstimate() {
         ? [["品質", item.quality]]
         : []),
       ["修理料金", formatYen(repairPrice)],
+       ...(largeCapacityFee
+  ? [["大容量バッテリー変更", `＋${formatYen(largeCapacityFee)}`]]
+  : []),
       ...(travelFee
         ? [["出張費", formatYen(travelFee)]]
         : [])
