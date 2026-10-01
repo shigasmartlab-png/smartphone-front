@@ -1,697 +1,932 @@
-/* ============================================================
-   初期セットアップ
-============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  setupMainTabs();
-  setupCoatTabs();
-  setupOsSwitch();
-  setupAccordions();
-　setupTravelOptions();
-});
+/* ==========================================
+   Shiga Smart Lab Estimate Simulator
+========================================== */
 
-
-/* ============================================================
-   メインタブ切り替え（フェード対応）
-============================================================ */
-function setupMainTabs() {
-  const tabButtons = document.querySelectorAll(".main-tab");
-  const tabContents = document.querySelectorAll(".tab-content");
-
-  tabButtons.forEach(btn => {
-    btn.onclick = () => {
-      tabButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      const tab = btn.dataset.tab;
-
-      tabContents.forEach(c => c.classList.remove("active"));
-      const target = document.getElementById(`tab-${tab}`);
-      if (target) target.classList.add("active");
-    };
-  });
-}
-
-/* ============================================================
-   コーティングタブ切り替え（iOS風トグル）
-============================================================ */
-function setupCoatTabs() {
-  const coatSwitch = document.getElementById("coat-switch");
-  const coatButtons = document.querySelectorAll(".coat-btn");
-  const coatContents = document.querySelectorAll(".coat-content");
-
-  // 初期状態
-  coatSwitch.classList.add("glass");
-
-  coatButtons.forEach(btn => {
-    btn.onclick = () => {
-      const target = btn.dataset.coat; // "glass" or "ceramic"
-
-      // ボタンの active 切り替え
-      coatButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      // トグルノブの位置変更
-      coatSwitch.classList.remove("glass", "ceramic");
-      coatSwitch.classList.add(target);
-
-      // コンテンツ切り替え
-      coatContents.forEach(c => c.classList.remove("active"));
-      const content = document.getElementById(`coat-${target}`);
-      if (content) content.classList.add("active");
-    };
-  });
-}
-
-/* ============================================================
-   出張対応エリア（片道距離 + 追加料金）
-============================================================ */
-const areas = {
-  "湖南市": { distance: 13.5 },
-  "日野町": { distance: 15.5 },
-  "竜王町": { distance: 20 },
-  "守山市": { distance: 25 },
-  "草津市": { distance: 27.5 },
-  "栗東市": { distance: 23 },
-  "野洲市": { distance: 23.5 },
-  "東近江市": { distance: 27 },
-  "近江八幡市": { distance: 28 },
-  "愛荘町": { distance: 35 },
-  "大津市南部（瀬田周辺）": { distance: 30 },
-  "大津市北部（堅田周辺）": { distance: 37, extra: 150 },
-  "大津市中部（市街地）": { distance: 39 },
-  "甲良町": { distance: 38.5 },
-  "豊郷町": { distance: 39 },
-  "多賀町": { distance: 40 },
-  "彦根市": { distance: 48 },
-  "米原市": { distance: 55 },
-  "長浜市": { distance: 62 },
-  "高島市": { distance: 70, extra: 150 }
-};
-
-/* ============================================================
-   出張費計算
-   出張費 = ((片道距離×2)/14km) × ガソリン単価 + extra
-============================================================ */
-function calcTravelFee(areaName, gasPrice = 180) {
-  const area = areas[areaName];
-  if (!area) return 0;
-
-  const distance = area.distance; // 片道
-  const roundTrip = distance * 2;
-
-  const fuel = roundTrip / 14; // 燃費 13km/L
-  let fee = fuel * gasPrice;
-
-  if (area.extra) fee += area.extra;
-
-  // ★ 100円未満を切り上げ（例：571 → 600）
-  fee = Math.ceil(fee / 100) * 100;
-
-  return fee;
-}
-
-
-/* ============================================================
-   出張対応 UI（チェックで地域プルダウン表示）
-============================================================ */
-function setupTravelOptions() {
-  const travelCheck = document.getElementById("travel-check");
-  const travelArea = document.getElementById("travel-area");
-
-  if (!travelCheck || !travelArea) return;
-
-  travelCheck.addEventListener("change", () => {
-    travelArea.style.display = travelCheck.checked ? "block" : "none";
-  });
-}
-
-
-/* ============================================================
-   API ベース URL
-============================================================ */
 const API_BASE = "https://estimate-api-6j8x.onrender.com";
 
-/* ============================================================
-   品質ランク説明文
-============================================================ */
-const QUALITY_DESCRIPTIONS = {
-  "互換品（LCD）": "純正ではない液晶パネル。価格が安いが、発色や明るさは純正より劣る場合があります。",
-  "互換品（OLED）": "純正ではないOLEDパネル。純正に近い発色でコスパが良いタイプ。",
-  "再生品（純正同等）": "純正パネルを再利用した高品質パネル。純正とほぼ同等の表示品質。",
-  "標準": "PSE認証マーク付きの互換バッテリーです。"
+const AVAILABILITY_API =
+  "https://script.google.com/macros/s/AKfycbxKAidOMkH2exn1zeUyIdueegpAdc50i3VSLnprFzKMiERJQWkoVXvQhx1n4pliVFF0/exec";
+
+let currentOS = "iPhone";
+let currentRepairs = [];
+
+/* ==========================================
+   出張設定
+========================================== */
+
+const areas = {
+  "湖南市": { distance: 15, extra: 0 },
+  "日野町": { distance: 22, extra: 0 },
+  "竜王町": { distance: 28, extra: 0 },
+  "守山市": { distance: 35, extra: 0 },
+  "草津市": { distance: 35, extra: 0 },
+  "栗東市": { distance: 30, extra: 0 },
+  "野洲市": { distance: 35, extra: 0 },
+  "東近江市": { distance: 35, extra: 0 },
+  "近江八幡市": { distance: 40, extra: 0 },
+  "愛荘町": { distance: 50, extra: 0 },
+  "大津市南部（瀬田周辺）": { distance: 45, extra: 0 },
+  "大津市中部（市街地）": { distance: 55, extra: 0 },
+  "大津市北部（堅田周辺）": { distance: 70, extra: 0 },
+  "甲良町": { distance: 55, extra: 0 },
+  "豊郷町": { distance: 60, extra: 0 },
+  "多賀町": { distance: 60, extra: 0 },
+  "彦根市": { distance: 65, extra: 0 },
+  "米原市": { distance: 80, extra: 0 },
+  "長浜市": { distance: 95, extra: 0 },
+  "高島市": { distance: 100, extra: 0 }
 };
 
-/* ============================================================
-   OS 切り替え（iOS風トグル＋API連動）
-============================================================ */
-let currentOS = "iPhone";
+const GAS_PRICE = 180;
+const FUEL_ECONOMY = 14;
 
-function setupOsSwitch() {
-  const osSwitch = document.getElementById("os-switch");
-  const btnIphone = document.getElementById("btn-iphone");
-  const btnAndroid = document.getElementById("btn-android");
+function calculateTravelFee(areaName) {
+  const area = areas[areaName];
 
-  if (!osSwitch || !btnIphone || !btnAndroid) return;
+  if (!area) return 0;
 
-  // 初期状態
-  osSwitch.classList.add("iphone");
-  btnIphone.classList.add("active");
+  const roundTrip = area.distance * 2;
+  const fuelCost = (roundTrip / FUEL_ECONOMY) * GAS_PRICE;
 
-  btnIphone.onclick = () => switchOS("iPhone");
-  btnAndroid.onclick = () => switchOS("Android");
+  return Math.ceil((fuelCost + area.extra) / 100) * 100;
 }
 
-function switchOS(os) {
-  const osSwitch = document.getElementById("os-switch");
-  const btnIphone = document.getElementById("btn-iphone");
-  const btnAndroid = document.getElementById("btn-android");
+/* ==========================================
+   初期化
+========================================== */
 
-  currentOS = os;
-
-  if (osSwitch) {
-    if (os === "iPhone") {
-      osSwitch.classList.add("iphone");
-      osSwitch.classList.remove("android");
-    } else {
-      osSwitch.classList.add("android");
-      osSwitch.classList.remove("iphone");
-    }
-  }
-
-  if (btnIphone && btnAndroid) {
-    btnIphone.classList.toggle("active", os === "iPhone");
-    btnAndroid.classList.toggle("active", os === "Android");
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  setupMainTabs();
+  setupOsSwitch();
+  setupCoatingTabs();
+  setupAccordions();
+  setupTravelOptions();
+  setupButtons();
 
   loadModels();
-}
-
-/* ============================================================
-   初期ロード
-============================================================ */
-window.onload = async () => {
-  await loadModels();
-};
-
-/* ============================================================
-   機種一覧
-============================================================ */
-async function loadModels() {
-  const res = await fetch(`${API_BASE}/models?os=${encodeURIComponent(currentOS)}`);
-  const data = await res.json();
-
-  const modelSelect = document.getElementById("model");
-  if (!modelSelect) return;
-
-  modelSelect.innerHTML = "";
-
-  (data.models || []).forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m;
-    opt.textContent = m;
-    modelSelect.appendChild(opt);
-  });
-
-  modelSelect.onchange = loadRepairs;
-  await loadRepairs();
-}
-
-/* ============================================================
-   故障内容 + 品質ランク
-============================================================ */
-async function loadRepairs() {
-  const modelSelect = document.getElementById("model");
-  if (!modelSelect) return;
-
-  const model = modelSelect.value;
-
-  const res = await fetch(`${API_BASE}/repairs?model=${encodeURIComponent(model)}`);
-  const data = await res.json();
-
-  const repairSelect = document.getElementById("repair_type");
-  const qualitySelect = document.getElementById("quality");
-  if (!repairSelect || !qualitySelect) return;
-
-  repairSelect.innerHTML = "";
-  qualitySelect.innerHTML = "";
-
-  const grouped = {};
-  (data.repairs || []).forEach(r => {
-    if (!grouped[r.name]) grouped[r.name] = [];
-    grouped[r.name].push({
-      quality: r.quality,
-      status: r.status
-    });
-  });
-
-  Object.keys(grouped).forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    repairSelect.appendChild(opt);
-  });
-
-  repairSelect.onchange = () => updateQuality(grouped);
-  updateQuality(grouped);
-}
-
-function updateQuality(grouped) {
-  const repairSelect = document.getElementById("repair_type");
-  const qualitySelect = document.getElementById("quality");
-  if (!repairSelect || !qualitySelect) return;
-
-  const repair = repairSelect.value;
-  qualitySelect.innerHTML = "";
-
-  (grouped[repair] || []).forEach(item => {
-    const opt = document.createElement("option");
-    opt.value = item.quality;
-
-    if (item.status === "available") {
-      opt.textContent = item.quality;
-    } else {
-      opt.textContent = `${item.quality}（未対応）`;
-      opt.disabled = true;
-    }
-
-    qualitySelect.appendChild(opt);
-  });
-
-  updateQualityDescription();
-  qualitySelect.onchange = updateQualityDescription;
-}
-
-/* ============================================================
-   品質ランク説明文
-============================================================ */
-function updateQualityDescription() {
-  const qualitySelect = document.getElementById("quality");
-  const descEl = document.getElementById("quality-description");
-  if (!qualitySelect || !descEl) return;
-
-  const q = qualitySelect.value;
-  const desc = QUALITY_DESCRIPTIONS[q] || "";
-  descEl.textContent = desc;
-}
-
-/* ============================================================
-   修理タブ：オプション
-============================================================ */
-function getSelectedOptions() {
-  const options = [];
-
-  const battery = document.getElementById("opt-battery");
-  if (battery && battery.checked) {
-    options.push("バッテリー大容量化");
-  }
-
-  const coatingSelect = document.getElementById("opt-coating");
-  if (coatingSelect && coatingSelect.value) {
-    options.push(coatingSelect.value);
-  }
-
-  return options;
-}
-
-/* ============================================================
-   修理見積もり
-============================================================ */
-async function estimate() {
-  const modelEl = document.getElementById("model");
-  const repairEl = document.getElementById("repair_type");
-  const qualityEl = document.getElementById("quality");
-  const resultArea = document.getElementById("result");
-
-  if (!modelEl || !repairEl || !qualityEl || !resultArea) return;
-
-  const model = modelEl.value;
-  const repair = repairEl.value;
-  const quality = qualityEl.value;
-
-  const selectedOptions = getSelectedOptions().join(",");
-
-  const url =
-    `${API_BASE}/estimate?model=${encodeURIComponent(model)}` +
-    `&repair_type=${encodeURIComponent(repair)}` +
-    `&quality=${encodeURIComponent(quality)}` +
-    `&options=${encodeURIComponent(selectedOptions)}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (data.error) {
-    resultArea.innerHTML = `<h2>見積もり結果</h2><p>${data.error}</p>`;
-    return;
-  }
-
-  let html = `
-    <h2>見積もり結果</h2>
-    <p><strong>機種:</strong> ${data.model}</p>
-    <p><strong>故障内容:</strong> ${data.repair_type}</p>
-    <p><strong>品質ランク:</strong> ${data.quality}</p>
-    <p><strong>基本料金:</strong> ¥${data.base_price.toLocaleString()}</p>
-  `;
-
-  if (data.options && data.options.length > 0) {
-    html += `<p><strong>オプション:</strong></p><ul>`;
-    data.options.forEach(opt => {
-      html += `<li>${opt.name}：¥${opt.price.toLocaleString()}</li>`;
-    });
-    html += `</ul>`;
-  }
-
-/* ▼ 出張費の取得 */
-const travelCheck = document.getElementById("travel-check");
-const travelArea = document.getElementById("travel-area");
-
-let travelFee = 0;
-if (travelCheck && travelCheck.checked && travelArea && travelArea.value) {
-  travelFee = calcTravelFee(travelArea.value);
-}
-
-/* ▼ 合計に出張費を加算 */
-const finalTotal = data.total + travelFee;
-
-html += `<p><strong>出張費:</strong> ¥${travelFee.toLocaleString()}</p>`;
-html += `<p><strong>合計:</strong> <span style="font-size:1.2em;">¥${finalTotal.toLocaleString()}</span></p>`;
-
-  resultArea.innerHTML = html;
-}
-
-/* ============================================================
-   ガラスコーティング
-============================================================ */
-async function calcGlassCoating() {
-  const countEl = document.getElementById("glass-count");
-  const typeEl = document.getElementById("glass-type");
-  const personEl = document.getElementById("glass-person");
-  const resultEl = document.getElementById("glass-result");
-
-  if (!countEl || !typeEl || !personEl || !resultEl) return;
-
-  const count = Number(countEl.value);
-  const type = typeEl.value;
-  const person = personEl.value;
-
-  const params = new URLSearchParams({ count, type, person });
-
-  const res = await fetch(`${API_BASE}/coating/glass?${params.toString()}`);
-  const data = await res.json();
-
-/* ▼ 出張費 */
-const travelCheck = document.getElementById("travel-check");
-const travelArea = document.getElementById("travel-area");
-
-let travelFee = 0;
-if (travelCheck && travelCheck.checked && travelArea && travelArea.value) {
-  travelFee = calcTravelFee(travelArea.value);
-}
-
-const finalTotal = data.total + travelFee;
-
-resultEl.innerHTML = `
-  <h2>ガラスコーティング見積もり</h2>
-  <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
-  <p>出張費：¥${travelFee.toLocaleString()}</p>
-  <p><strong>合計：¥${finalTotal.toLocaleString()}</strong></p>
-`;
-
-}
-
-/* ============================================================
-   セラミックコーティング
-============================================================ */
-async function calcCeramicCoating() {
-  const countEl = document.getElementById("ceramic-count");
-  const typeEl = document.getElementById("ceramic-type");
-  const personEl = document.getElementById("ceramic-person");
-  const resultEl = document.getElementById("ceramic-result");
-
-  if (!countEl || !typeEl || !personEl || !resultEl) return;
-
-  const count = Number(countEl.value);
-  const type = typeEl.value;
-  const person = personEl.value;
-
-  const params = new URLSearchParams({ count, type, person });
-
-  const res = await fetch(`${API_BASE}/coating/ceramic?${params.toString()}`);
-  const data = await res.json();
-
-/* ▼ 出張費 */
-const travelCheck = document.getElementById("travel-check");
-const travelArea = document.getElementById("travel-area");
-
-let travelFee = 0;
-if (travelCheck && travelCheck.checked && travelArea && travelArea.value) {
-  travelFee = calcTravelFee(travelArea.value);
-}
-
-const finalTotal = data.total + travelFee;
-
-resultEl.innerHTML = `
-  <h2>セラミックコーティング見積もり</h2>
-  <p>1台あたり：¥${data.price_per_unit.toLocaleString()}</p>
-  <p>出張費：¥${travelFee.toLocaleString()}</p>
-  <p><strong>合計：¥${finalTotal.toLocaleString()}</strong></p>
-`;
-
-}
-
-/* ============================================================
-   セット割アコーディオン（スムーズ開閉版）
-============================================================ */
-function setupAccordions() {
-  const glassHeader = document.querySelector("#coat-glass .accordion-header");
-  const glassList = document.getElementById("price-rules-glass");
-  const glassIcon = document.getElementById("accordion-icon-glass");
-
-  if (glassHeader && glassList && glassIcon) {
-    glassHeader.addEventListener("click", () => {
-      toggleAccordion(glassList, glassIcon);
-    });
-  }
-
-  const ceramicHeader = document.querySelector("#coat-ceramic .accordion-header");
-  const ceramicList = document.getElementById("price-rules-ceramic");
-  const ceramicIcon = document.getElementById("accordion-icon-ceramic");
-
-  if (ceramicHeader && ceramicList && ceramicIcon) {
-    ceramicHeader.addEventListener("click", () => {
-      toggleAccordion(ceramicList, ceramicIcon);
-    });
-  }
-}
-
-function toggleAccordion(listEl, iconEl) {
-  const isOpen = listEl.classList.contains("open");
-  if (isOpen) {
-    listEl.classList.remove("open");
-    iconEl.style.transform = "rotate(0deg)";
-  } else {
-    listEl.classList.add("open");
-    iconEl.style.transform = "rotate(180deg)";
-  }
-}
-
-
-/* ============================================================
-   ICS → 1か月タイムライン（Instagram対応・完全版）
-============================================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  const timelineEl = document.getElementById("calendar-timeline");
-  const reloadBtn = document.getElementById("calendar-reload");
-  if (!timelineEl) return;
-
-  const GAS_URL =
-    "https://script.google.com/macros/s/AKfycbz90K4zuxXzS_LM24sMx5-Dc_I7BhKomfF1YRJTS8uXSLnZXugRd-lx1GLL2PrTCA/exec";
-
-  /* ------------------------------
-      カレンダー読み込み処理
-  ------------------------------ */
-  function loadCalendar() {
-    timelineEl.innerHTML = "<p>読み込み中...</p>";
-
-    fetch(GAS_URL)
-      .then(res => res.json())
-      .then(events => {
-        const now = new Date();
-        const oneMonthLater = new Date();
-        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-
-        // 期間内の予定だけ抽出
-        const filtered = events.filter(ev => {
-          const st = new Date(ev.start);
-          return st >= startOfDay(now) && st <= oneMonthLater;
-        });
-
-        // 日付ごとにグループ化
-        const grouped = groupByDate(
-          filtered.map(ev => ({
-            start: new Date(ev.start),
-            end: new Date(ev.end),
-            summary: ev.summary
-          }))
-        );
-
-        renderTimeline(grouped, timelineEl);
-      })
-      .catch(err => {
-        console.error(err);
-        timelineEl.innerHTML = "<p>カレンダーの読み込みに失敗しました。</p>";
-      });
-  }
-
-  // 初回読み込み
-  loadCalendar();
-
-  // 再読み込みボタン
-  if (reloadBtn) {
-    reloadBtn.addEventListener("click", () => {
-      loadCalendar();
-    });
-  }
 });
 
-/* ============================================================
-   日付ごとにグループ化
-============================================================ */
-function groupByDate(events) {
-  const map = {};
+/* ==========================================
+   メインタブ
+========================================== */
 
-  events.forEach(ev => {
-    const key = formatDateKey(ev.start);
-    if (!map[key]) map[key] = [];
-    map[key].push(ev);
+function setupMainTabs() {
+  const buttons = document.querySelectorAll(".main-tab");
+
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      const tabName = button.dataset.tab;
+
+      buttons.forEach(btn => btn.classList.remove("active"));
+
+      document
+        .querySelectorAll(".tab-content")
+        .forEach(content => content.classList.remove("active"));
+
+      button.classList.add("active");
+
+      const target = document.getElementById(`tab-${tabName}`);
+      if (target) target.classList.add("active");
+
+      if (tabName === "calendar") {
+        loadAvailability();
+      }
+    });
+  });
+}
+
+/* ==========================================
+   OS
+========================================== */
+
+function setupOsSwitch() {
+  const iphone = document.getElementById("btn-iphone");
+  const android = document.getElementById("btn-android");
+
+  iphone.addEventListener("click", () => {
+    if (currentOS === "iPhone") return;
+
+    currentOS = "iPhone";
+
+    iphone.classList.add("active");
+    android.classList.remove("active");
+
+    loadModels();
   });
 
-  return map;
+  android.addEventListener("click", () => {
+    if (currentOS === "Android") return;
+
+    currentOS = "Android";
+
+    android.classList.add("active");
+    iphone.classList.remove("active");
+
+    loadModels();
+  });
 }
 
-/* ============================================================
-   3時間枠生成
-============================================================ */
-function generateThreeHourSlots(date, openHour = 9, closeHour = 21) {
-  const slots = [];
-  for (let h = openHour; h < closeHour; h += 3) {
-    const start = new Date(date);
-    start.setHours(h, 0, 0, 0);
+/* ==========================================
+   機種
+========================================== */
 
-    const end = new Date(date);
-    end.setHours(Math.min(h + 3, closeHour), 0, 0, 0);
+async function loadModels() {
+  const model = document.getElementById("model");
+  const repair = document.getElementById("repair_type");
+  const button = document.getElementById("repair-estimate-btn");
+  const detail = document.getElementById("repair-detail");
 
-    slots.push({ start, end });
+  model.disabled = true;
+  repair.disabled = true;
+  button.disabled = true;
+
+  detail.classList.add("hidden");
+  document.getElementById("result").replaceChildren();
+
+  setSelectMessage(model, "価格データを読み込んでいます...");
+  setSelectMessage(repair, "先に機種を選択してください");
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/models?os=${encodeURIComponent(currentOS)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("機種データを取得できませんでした");
+    }
+
+    const data = await response.json();
+
+    const models = Array.isArray(data)
+      ? data
+      : Array.isArray(data.models)
+        ? data.models
+        : [];
+
+    model.replaceChildren();
+
+    const first = document.createElement("option");
+    first.value = "";
+    first.textContent = "機種を選択してください";
+    model.appendChild(first);
+
+    models.forEach(item => {
+      const name =
+        typeof item === "string"
+          ? item
+          : item.model || item.name || "";
+
+      if (!name) return;
+
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+
+      model.appendChild(option);
+    });
+
+    model.disabled = false;
+
+  } catch (error) {
+    console.error(error);
+
+    setSelectMessage(
+      model,
+      "読み込みに失敗しました。時間をおいて再度お試しください"
+    );
   }
-  return slots;
+
+  model.onchange = loadRepairs;
 }
 
-/* ============================================================
-   予約/空き判定
-============================================================ */
-function classifyEvent(ev) {
-  const s = ev.summary || "";
+function setSelectMessage(select, message) {
+  select.replaceChildren();
 
-  // 予約扱い
-  if (s.includes("×")) return "busy";
-  if (s.includes("予約済")) return "busy";
+  const option = document.createElement("option");
+  option.value = "";
+  option.textContent = message;
 
-  // 〇 は空き扱い
-  if (s.includes("〇")) return "free";
-
-  // その他（メモなど）も free 扱い
-  return "free";
+  select.appendChild(option);
 }
 
+/* ==========================================
+   修理一覧
+========================================== */
 
-/* ============================================================
-   枠と予定の重なり判定
-============================================================ */
-function getSlotStatus(slot, events) {
-  const overlapped = events.filter(ev =>
-    ev.start < slot.end && ev.end > slot.start
-  );
+async function loadRepairs() {
+  const modelName = document.getElementById("model").value;
+  const repair = document.getElementById("repair_type");
+  const button = document.getElementById("repair-estimate-btn");
+  const detail = document.getElementById("repair-detail");
 
-  if (overlapped.length === 0) return "free";
+  currentRepairs = [];
+  repair.disabled = true;
+  button.disabled = true;
 
-  if (overlapped.some(ev => classifyEvent(ev) === "busy")) {
-    return "busy";
-  }
+  detail.classList.add("hidden");
+  document.getElementById("result").replaceChildren();
 
-  return "free";
-}
-
-/* ============================================================
-   タイムライン描画（3時間枠対応）
-============================================================ */
-function renderTimeline(grouped, el) {
-  el.innerHTML = "";
-
-  const keys = Object.keys(grouped).sort();
-  if (keys.length === 0) {
-    el.innerHTML = "<p>今後1か月の予約は登録されていません。</p>";
+  if (!modelName) {
+    setSelectMessage(repair, "先に機種を選択してください");
     return;
   }
 
-  keys.forEach(key => {
-    const dayBox = document.createElement("div");
-    dayBox.className = "calendar-day";
+  setSelectMessage(repair, "修理メニューを読み込んでいます...");
 
-    const title = document.createElement("div");
-    title.className = "calendar-day-title";
-    title.textContent = formatDateLabel(key);
-    dayBox.appendChild(title);
+  try {
+    const response = await fetch(
+      `${API_BASE}/repairs?model=${encodeURIComponent(modelName)}`
+    );
 
-    const date = new Date(key);
-    const slots = generateThreeHourSlots(date);
+    if (!response.ok) {
+      throw new Error("修理データを取得できませんでした");
+    }
 
-    slots.forEach(slot => {
-      const status = getSlotStatus(slot, grouped[key]);
+    const data = await response.json();
 
-      const slotEl = document.createElement("div");
-      slotEl.className = "calendar-slot " + status;
+    currentRepairs = Array.isArray(data)
+      ? data
+      : Array.isArray(data.repairs)
+        ? data.repairs
+        : [];
 
-      const time = document.createElement("div");
-      time.className = "calendar-slot-time";
-      time.textContent = `${formatTime(slot.start)} 〜 ${formatTime(slot.end)}`;
+    repair.replaceChildren();
 
-      const label = document.createElement("div");
-      label.className = "calendar-slot-label";
-      label.textContent = status === "busy" ? "予約済" : "空き";
+    const first = document.createElement("option");
+    first.value = "";
+    first.textContent = "修理内容を選択してください";
+    repair.appendChild(first);
 
-      slotEl.appendChild(time);
-      slotEl.appendChild(label);
-      dayBox.appendChild(slotEl);
+    currentRepairs.forEach((item, index) => {
+      const option = document.createElement("option");
+
+      option.value = String(index);
+
+      const name =
+        item.name ||
+        item.category ||
+        item.part ||
+        "修理";
+
+      const quality =
+        item.quality &&
+        item.quality !== "標準"
+          ? `｜${item.quality}`
+          : "";
+
+      option.textContent =
+        `${name}${quality}　${formatYen(item.price)}`;
+
+      repair.appendChild(option);
     });
 
-    el.appendChild(dayBox);
+    repair.disabled = false;
+
+    if (!currentRepairs.length) {
+      setSelectMessage(repair, "現在公開中の修理価格がありません");
+      repair.disabled = true;
+    }
+
+  } catch (error) {
+    console.error(error);
+
+    setSelectMessage(
+      repair,
+      "読み込みに失敗しました"
+    );
+  }
+
+  repair.onchange = handleRepairSelection;
+}
+
+function handleRepairSelection() {
+  const select = document.getElementById("repair_type");
+  const button = document.getElementById("repair-estimate-btn");
+  const detail = document.getElementById("repair-detail");
+
+  if (select.value === "") {
+    button.disabled = true;
+    detail.classList.add("hidden");
+    return;
+  }
+
+  const item = currentRepairs[Number(select.value)];
+
+  if (!item) {
+    button.disabled = true;
+    detail.classList.add("hidden");
+    return;
+  }
+
+  detail.replaceChildren();
+
+  const name = document.createElement("strong");
+  name.textContent =
+    item.name ||
+    item.category ||
+    "修理";
+
+  const price = document.createElement("span");
+  price.textContent = formatYen(item.price);
+
+  detail.append(name, price);
+
+  if (item.quality) {
+    const quality = document.createElement("small");
+    quality.textContent = `品質：${item.quality}`;
+    detail.appendChild(quality);
+  }
+
+  if (item.note) {
+    const note = document.createElement("small");
+    note.textContent = item.note;
+    detail.appendChild(note);
+  }
+
+  detail.classList.remove("hidden");
+  button.disabled = false;
+}
+
+/* ==========================================
+   修理見積もり
+========================================== */
+
+function showRepairEstimate() {
+  const repairSelect = document.getElementById("repair_type");
+
+  if (repairSelect.value === "") return;
+
+  const item = currentRepairs[Number(repairSelect.value)];
+
+  if (!item) return;
+
+  const modelName = document.getElementById("model").value;
+
+  const travelCheck =
+    document.getElementById("repair-travel-check");
+
+  const travelArea =
+    document.getElementById("repair-travel-area");
+
+  let travelFee = 0;
+
+  if (travelCheck.checked) {
+    if (!travelArea.value) {
+      alert("出張地域を選択してください");
+      return;
+    }
+
+    travelFee = calculateTravelFee(travelArea.value);
+  }
+
+  const repairPrice = Number(item.price) || 0;
+  const total = repairPrice + travelFee;
+
+  renderResult(
+    "result",
+    [
+      ["機種", modelName],
+      [
+        "修理内容",
+        item.name ||
+        item.category ||
+        "修理"
+      ],
+      ...(item.quality
+        ? [["品質", item.quality]]
+        : []),
+      ["修理料金", formatYen(repairPrice)],
+      ...(travelFee
+        ? [["出張費", formatYen(travelFee)]]
+        : [])
+    ],
+    total
+  );
+}
+
+/* ==========================================
+   コーティングタブ
+========================================== */
+
+function setupCoatingTabs() {
+  const buttons = document.querySelectorAll(".coat-btn");
+
+  buttons.forEach(button => {
+    button.addEventListener("click", () => {
+      const type = button.dataset.coat;
+
+      buttons.forEach(btn => btn.classList.remove("active"));
+
+      document
+        .querySelectorAll(".coat-content")
+        .forEach(content => content.classList.remove("active"));
+
+      button.classList.add("active");
+
+      const target =
+        document.getElementById(`coat-${type}`);
+
+      if (target) target.classList.add("active");
+    });
   });
 }
 
-/* ============================================================
-   日付・時間フォーマット
-============================================================ */
-function startOfDay(d) {
-  const nd = new Date(d);
-  nd.setHours(0, 0, 0, 0);
-  return nd;
+/* ==========================================
+   アコーディオン
+========================================== */
+
+function setupAccordions() {
+  document
+    .querySelectorAll(".accordion-header")
+    .forEach(button => {
+      button.addEventListener("click", () => {
+        const type = button.dataset.accordion;
+        const list =
+          document.getElementById(`price-rules-${type}`);
+
+        if (!list) return;
+
+        const open = list.classList.toggle("open");
+
+        const icon = button.querySelector("span:last-child");
+
+        if (icon) {
+          icon.textContent = open ? "−" : "＋";
+        }
+      });
+    });
 }
 
-function formatDateKey(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+/* ==========================================
+   出張UI
+========================================== */
+
+function setupTravelOptions() {
+  setupTravel(
+    "repair-travel-check",
+    "repair-travel-area"
+  );
+
+  setupTravel(
+    "glass-travel-check",
+    "glass-travel-area"
+  );
+
+  setupTravel(
+    "ceramic-travel-check",
+    "ceramic-travel-area"
+  );
 }
 
-function formatDateLabel(key) {
-  const [y, m, d] = key.split("-").map(Number);
-  const dt = new Date(y, m - 1, d);
-  const w = ["日", "月", "火", "水", "木", "金", "土"][dt.getDay()];
-  return `${m}/${d}（${w}）`;
+function setupTravel(checkId, areaId) {
+  const check = document.getElementById(checkId);
+  const select = document.getElementById(areaId);
+
+  if (!check || !select) return;
+
+  Object.keys(areas).forEach(areaName => {
+    const option = document.createElement("option");
+    option.value = areaName;
+    option.textContent = areaName;
+    select.appendChild(option);
+  });
+
+  check.addEventListener("change", () => {
+    if (check.checked) {
+      select.classList.remove("hidden");
+    } else {
+      select.classList.add("hidden");
+      select.value = "";
+    }
+  });
 }
 
-function formatTime(d) {
-  const h = String(d.getHours()).padStart(2, "0");
-  const m = String(d.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+/* ==========================================
+   コーティング料金
+========================================== */
+
+async function calcGlassCoating() {
+  await calculateCoating(
+    "glass",
+    "glass-count",
+    "glass-type",
+    "glass-person",
+    "glass-travel-check",
+    "glass-travel-area",
+    "glass-result"
+  );
+}
+
+async function calcCeramicCoating() {
+  await calculateCoating(
+    "ceramic",
+    "ceramic-count",
+    "ceramic-type",
+    "ceramic-person",
+    "ceramic-travel-check",
+    "ceramic-travel-area",
+    "ceramic-result"
+  );
+}
+
+async function calculateCoating(
+  kind,
+  countId,
+  typeId,
+  personId,
+  travelCheckId,
+  travelAreaId,
+  resultId
+) {
+  const count =
+    Math.max(
+      1,
+      Number(document.getElementById(countId).value) || 1
+    );
+
+  const type =
+    document.getElementById(typeId).value;
+
+  const person =
+    document.getElementById(personId).value;
+
+  const travelCheck =
+    document.getElementById(travelCheckId);
+
+  const travelArea =
+    document.getElementById(travelAreaId);
+
+  let travelFee = 0;
+
+  if (travelCheck.checked) {
+    if (!travelArea.value) {
+      alert("出張地域を選択してください");
+      return;
+    }
+
+    travelFee = calculateTravelFee(travelArea.value);
+  }
+
+  const button =
+    kind === "glass"
+      ? document.getElementById("glass-calc-btn")
+      : document.getElementById("ceramic-calc-btn");
+
+  const originalText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "計算中...";
+
+  try {
+    const params = new URLSearchParams({
+      count: String(count),
+      type,
+      person
+    });
+
+    const response = await fetch(
+      `${API_BASE}/coating/${kind}?${params.toString()}`
+    );
+
+    if (!response.ok) {
+      throw new Error("料金を取得できませんでした");
+    }
+
+    const data = await response.json();
+
+    const coatingPrice = getPriceFromResponse(data);
+    const total = coatingPrice + travelFee;
+
+    renderResult(
+      resultId,
+      [
+        ["台数", `${count}台`],
+        ["施工面", type === "double" ? "両面" : "片面"],
+        [
+          "対象",
+          person === "student"
+            ? "学生"
+            : person === "senior"
+              ? "シニア"
+              : "一般"
+        ],
+        ["コーティング料金", formatYen(coatingPrice)],
+        ...(travelFee
+          ? [["出張費", formatYen(travelFee)]]
+          : [])
+      ],
+      total
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    renderError(
+      resultId,
+      "料金の取得に失敗しました。時間をおいて再度お試しください。"
+    );
+
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+function getPriceFromResponse(data) {
+  if (typeof data === "number") return data;
+
+  const candidates = [
+    data.total,
+    data.price,
+    data.total_price,
+    data.amount
+  ];
+
+  const value = candidates.find(
+    item => Number.isFinite(Number(item))
+  );
+
+  return Number(value) || 0;
+}
+
+/* ==========================================
+   結果表示
+========================================== */
+
+function renderResult(targetId, rows, total) {
+  const target = document.getElementById(targetId);
+
+  target.replaceChildren();
+
+  const card = document.createElement("div");
+  card.className = "result-card";
+
+  const heading = document.createElement("span");
+  heading.className = "result-label";
+  heading.textContent = "お見積もり";
+
+  card.appendChild(heading);
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "result-row";
+
+    const left = document.createElement("span");
+    left.textContent = label;
+
+    const right = document.createElement("strong");
+    right.textContent = value;
+
+    row.append(left, right);
+    card.appendChild(row);
+  });
+
+  const totalRow = document.createElement("div");
+  totalRow.className = "result-total";
+
+  const totalLabel = document.createElement("span");
+  totalLabel.textContent = "合計";
+
+  const totalPrice = document.createElement("strong");
+  totalPrice.textContent = formatYen(total);
+
+  totalRow.append(totalLabel, totalPrice);
+  card.appendChild(totalRow);
+
+  target.appendChild(card);
+}
+
+function renderError(targetId, message) {
+  const target = document.getElementById(targetId);
+
+  target.replaceChildren();
+
+  const box = document.createElement("div");
+  box.className = "error-card";
+  box.textContent = message;
+
+  target.appendChild(box);
+}
+
+/* ==========================================
+   空き状況
+========================================== */
+
+async function loadAvailability() {
+  const wrapper =
+    document.getElementById("calendar-timeline");
+
+  wrapper.replaceChildren();
+
+  const loading = document.createElement("div");
+  loading.className = "loading-card";
+  loading.textContent = "空き状況を読み込んでいます...";
+
+  wrapper.appendChild(loading);
+
+  try {
+    const response = await fetch(
+      `${AVAILABILITY_API}?t=${Date.now()}`
+    );
+
+    if (!response.ok) {
+      throw new Error("空き状況を取得できませんでした");
+    }
+
+    const data = await response.json();
+
+    if (
+      !data.success ||
+      !Array.isArray(data.availability)
+    ) {
+      throw new Error("空き状況データが不正です");
+    }
+
+    renderAvailability(data.availability);
+
+  } catch (error) {
+    console.error(error);
+
+    wrapper.replaceChildren();
+
+    const errorBox = document.createElement("div");
+    errorBox.className = "error-card";
+    errorBox.textContent =
+      "空き状況を読み込めませんでした。再読み込みをお試しください。";
+
+    wrapper.appendChild(errorBox);
+  }
+}
+
+function renderAvailability(items) {
+  const wrapper =
+    document.getElementById("calendar-timeline");
+
+  wrapper.replaceChildren();
+
+  const groups = {};
+
+  items.forEach(item => {
+    const date = parseApiDate(item.date);
+
+    if (!date) return;
+
+    const key =
+      `${date.getFullYear()}-${date.getMonth() + 1}`;
+
+    if (!groups[key]) {
+      groups[key] = {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        items: []
+      };
+    }
+
+    groups[key].items.push({
+      ...item,
+      parsedDate: date
+    });
+  });
+
+  const groupList = Object.values(groups);
+
+  if (!groupList.length) {
+    const empty = document.createElement("div");
+    empty.className = "loading-card";
+    empty.textContent = "現在、公開中の空き状況はありません。";
+
+    wrapper.appendChild(empty);
+    return;
+  }
+
+  groupList.forEach(group => {
+    const monthCard = document.createElement("section");
+    monthCard.className = "month-card";
+
+    const heading = document.createElement("h3");
+    heading.className = "month-title";
+    heading.textContent =
+      `${group.year}年${group.month}月`;
+
+    monthCard.appendChild(heading);
+
+    const list = document.createElement("div");
+    list.className = "availability-list";
+
+    group.items.forEach(item => {
+      list.appendChild(createAvailabilityRow(item));
+    });
+
+    monthCard.appendChild(list);
+    wrapper.appendChild(monthCard);
+  });
+}
+
+function createAvailabilityRow(item) {
+  const row = document.createElement("div");
+  row.className = "availability-row";
+
+  const dateBox = document.createElement("div");
+  dateBox.className = "availability-date";
+
+  const day = document.createElement("strong");
+  day.textContent =
+    `${item.parsedDate.getMonth() + 1}/${item.parsedDate.getDate()}`;
+
+  const weekday = document.createElement("span");
+  weekday.textContent =
+    `（${getWeekday(item.parsedDate)}）`;
+
+  dateBox.append(day, weekday);
+
+  const status = document.createElement("span");
+  status.className =
+    `availability-status ${statusClass(item.status)}`;
+
+  status.textContent =
+    item.status || "―";
+
+  row.append(dateBox, status);
+
+  if (item.note) {
+    const note = document.createElement("div");
+    note.className = "availability-note";
+    note.textContent = item.note;
+
+    row.appendChild(note);
+  }
+
+  return row;
+}
+
+function parseApiDate(value) {
+  if (!value) return null;
+
+  const match =
+    String(value).match(
+      /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/
+    );
+
+  if (!match) return null;
+
+  return new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3])
+  );
+}
+
+function getWeekday(date) {
+  return ["日", "月", "火", "水", "木", "金", "土"][
+    date.getDay()
+  ];
+}
+
+function statusClass(status) {
+  switch (status) {
+    case "〇":
+      return "status-o";
+
+    case "△":
+      return "status-triangle";
+
+    case "×":
+      return "status-x";
+
+    case "休":
+      return "status-off";
+
+    default:
+      return "status-unknown";
+  }
+}
+
+/* ==========================================
+   ボタン
+========================================== */
+
+function setupButtons() {
+  document
+    .getElementById("repair-estimate-btn")
+    .addEventListener("click", showRepairEstimate);
+
+  document
+    .getElementById("glass-calc-btn")
+    .addEventListener("click", calcGlassCoating);
+
+  document
+    .getElementById("ceramic-calc-btn")
+    .addEventListener("click", calcCeramicCoating);
+
+  document
+    .getElementById("calendar-reload")
+    .addEventListener("click", loadAvailability);
+}
+
+/* ==========================================
+   共通
+========================================== */
+
+function formatYen(value) {
+  return `${Number(value || 0).toLocaleString("ja-JP")}円`;
 }
