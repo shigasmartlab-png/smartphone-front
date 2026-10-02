@@ -7,8 +7,6 @@ const API_BASE = "https://estimate-api-6j8x.onrender.com";
 const AVAILABILITY_API =
   "https://script.google.com/macros/s/AKfycbxKAidOMkH2exn1zeUyIdueegpAdc50i3VSLnprFzKMiERJQWkoVXvQhx1n4pliVFF0/exec";
 
-const LARGE_CAPACITY_EXTRA = 1500;
-
 let currentOS = "iPhone";
 let currentRepairs = [];
 
@@ -56,47 +54,6 @@ function calculateTravelFee(areaName) {
 
 
 /* ==========================================
-   大容量バッテリー
-========================================== */
-
-function getBatteryOptionElements() {
-  return {
-    option: document.getElementById("battery-capacity-option"),
-    check: document.getElementById("battery-capacity-check")
-  };
-}
-
-function resetBatteryOption() {
-  const { option, check } = getBatteryOptionElements();
-
-  if (option) {
-    option.classList.add("hidden");
-  }
-
-  if (check) {
-    check.checked = false;
-  }
-}
-
-function isBatteryRepair(item) {
-  if (!item) return false;
-
-  const repairName =
-    `${item.name || ""} ${item.category || ""} ${item.part || ""}`;
-
-  return repairName.includes("バッテリー");
-}
-
-function showBatteryOption() {
-  const { option } = getBatteryOptionElements();
-
-  if (option) {
-    option.classList.remove("hidden");
-  }
-}
-
-
-/* ==========================================
    初期化
 ========================================== */
 
@@ -107,8 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAccordions();
   setupTravelOptions();
   setupButtons();
-
-  resetBatteryOption();
   loadModels();
 });
 
@@ -187,8 +142,6 @@ async function loadModels() {
   const repair = document.getElementById("repair_type");
   const button = document.getElementById("repair-estimate-btn");
   const detail = document.getElementById("repair-detail");
-
-  resetBatteryOption();
 
   currentRepairs = [];
 
@@ -277,8 +230,6 @@ async function loadRepairs() {
   const detail = document.getElementById("repair-detail");
 
   currentRepairs = [];
-
-  resetBatteryOption();
 
   repair.disabled = true;
   button.disabled = true;
@@ -373,8 +324,6 @@ function handleRepairSelection() {
   const button = document.getElementById("repair-estimate-btn");
   const detail = document.getElementById("repair-detail");
 
-  resetBatteryOption();
-
   document.getElementById("result").replaceChildren();
 
   if (select.value === "") {
@@ -417,9 +366,6 @@ function handleRepairSelection() {
     detail.appendChild(note);
   }
 
-  if (isBatteryRepair(item)) {
-    showBatteryOption();
-  }
 
   detail.classList.remove("hidden");
   button.disabled = false;
@@ -463,21 +409,9 @@ function showRepairEstimate() {
   const repairPrice =
     Number(item.price) || 0;
 
-  const { check: batteryCheck } =
-    getBatteryOptionElements();
-
-  const largeCapacity =
-    isBatteryRepair(item) &&
-    Boolean(batteryCheck?.checked);
-
-  const largeCapacityFee =
-    largeCapacity
-      ? LARGE_CAPACITY_EXTRA
-      : 0;
-
+  // 大容量は別メニューとして販売価格に含まれているため、追加加算しない。
   const total =
     repairPrice +
-    largeCapacityFee +
     travelFee;
 
   renderResult(
@@ -498,12 +432,6 @@ function showRepairEstimate() {
 
       ["修理料金", formatYen(repairPrice)],
 
-      ...(largeCapacityFee
-        ? [[
-            "大容量バッテリー変更",
-            `＋${formatYen(largeCapacityFee)}`
-          ]]
-        : []),
 
       ...(travelFee
         ? [["出張費", formatYen(travelFee)]]
