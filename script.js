@@ -9,6 +9,8 @@ const AVAILABILITY_API =
 
 let currentOS = "iPhone";
 let currentRepairs = [];
+let batteryRepairs = [];
+let selectedRepairItem = null;
 
 
 /* ==========================================
@@ -64,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAccordions();
   setupTravelOptions();
   setupButtons();
+  setupBatterySelectors();
   loadModels();
 });
 
@@ -144,6 +147,9 @@ async function loadModels() {
   const detail = document.getElementById("repair-detail");
 
   currentRepairs = [];
+  batteryRepairs = [];
+  selectedRepairItem = null;
+  resetBatterySelectors();
 
   model.disabled = true;
   repair.disabled = true;
@@ -223,26 +229,368 @@ function setSelectMessage(select, message) {
    修理一覧
 ========================================== */
 
+function isBatteryRepair(item) {
+  if (!item) return false;
+
+  const text = [
+    item.name || "",
+    item.category || "",
+    item.part || ""
+  ].join(" ");
+
+  return text.includes("バッテリー");
+}
+
+function getBatteryType(item) {
+  const quality = String(item?.quality || "").trim();
+
+  return quality
+    .replace(/・大容量/g, "")
+    .trim() || "通常";
+}
+
+function getBatteryCapacity(item) {
+  return String(item?.quality || "").includes("大容量")
+    ? "large"
+    : "standard";
+}
+
+function getBatteryCapacityLabel(capacity) {
+  return capacity === "large"
+    ? "大容量"
+    : "標準容量";
+}
+
+function setupBatterySelectors() {
+  const typeSelect =
+    document.getElementById("battery-type");
+  const capacitySelect =
+    document.getElementById("battery-capacity");
+
+  if (typeSelect) {
+    typeSelect.addEventListener(
+      "change",
+      handleBatteryTypeSelection
+    );
+  }
+
+  if (capacitySelect) {
+    capacitySelect.addEventListener(
+      "change",
+      handleBatteryCapacitySelection
+    );
+  }
+}
+
+function resetBatterySelectors() {
+  const typeField =
+    document.getElementById("battery-type-field");
+  const capacityField =
+    document.getElementById("battery-capacity-field");
+  const typeSelect =
+    document.getElementById("battery-type");
+  const capacitySelect =
+    document.getElementById("battery-capacity");
+
+  if (typeField) {
+    typeField.classList.add("hidden");
+  }
+
+  if (capacityField) {
+    capacityField.classList.add("hidden");
+  }
+
+  if (typeSelect) {
+    setSelectMessage(
+      typeSelect,
+      "先にバッテリー交換を選択してください"
+    );
+    typeSelect.disabled = true;
+  }
+
+  if (capacitySelect) {
+    setSelectMessage(
+      capacitySelect,
+      "先にバッテリー種類を選択してください"
+    );
+    capacitySelect.disabled = true;
+  }
+}
+
+function populateBatteryTypes() {
+  const field =
+    document.getElementById("battery-type-field");
+  const select =
+    document.getElementById("battery-type");
+
+  if (!field || !select) return;
+
+  const order = [
+    "通常",
+    "高品質",
+    "TIチップ搭載"
+  ];
+
+  const available = [
+    ...new Set(
+      batteryRepairs.map(getBatteryType)
+    )
+  ].sort((a, b) => {
+    const ai = order.indexOf(a);
+    const bi = order.indexOf(b);
+
+    if (ai === -1 && bi === -1) {
+      return a.localeCompare(b, "ja");
+    }
+
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+
+    return ai - bi;
+  });
+
+  select.replaceChildren();
+
+  const first =
+    document.createElement("option");
+  first.value = "";
+  first.textContent =
+    "バッテリー種類を選択してください";
+  select.appendChild(first);
+
+  available.forEach(type => {
+    const option =
+      document.createElement("option");
+
+    option.value = type;
+    option.textContent = type;
+
+    select.appendChild(option);
+  });
+
+  field.classList.remove("hidden");
+  select.disabled = false;
+}
+
+function handleBatteryTypeSelection() {
+  const typeSelect =
+    document.getElementById("battery-type");
+  const capacityField =
+    document.getElementById("battery-capacity-field");
+  const capacitySelect =
+    document.getElementById("battery-capacity");
+  const button =
+    document.getElementById("repair-estimate-btn");
+  const detail =
+    document.getElementById("repair-detail");
+
+  selectedRepairItem = null;
+  button.disabled = true;
+  detail.classList.add("hidden");
+  document
+    .getElementById("result")
+    .replaceChildren();
+
+  if (!typeSelect?.value) {
+    capacityField?.classList.add("hidden");
+
+    if (capacitySelect) {
+      setSelectMessage(
+        capacitySelect,
+        "先にバッテリー種類を選択してください"
+      );
+      capacitySelect.disabled = true;
+    }
+
+    return;
+  }
+
+  const variants =
+    batteryRepairs.filter(
+      item =>
+        getBatteryType(item) ===
+        typeSelect.value
+    );
+
+  const capacities = [
+    ...new Set(
+      variants.map(getBatteryCapacity)
+    )
+  ];
+
+  capacitySelect.replaceChildren();
+
+  const first =
+    document.createElement("option");
+  first.value = "";
+  first.textContent =
+    "容量を選択してください";
+  capacitySelect.appendChild(first);
+
+  ["standard", "large"]
+    .filter(capacity =>
+      capacities.includes(capacity)
+    )
+    .forEach(capacity => {
+      const variant =
+        variants.find(
+          item =>
+            getBatteryCapacity(item) ===
+            capacity
+        );
+
+      const option =
+        document.createElement("option");
+
+      option.value = capacity;
+      option.textContent =
+        `${getBatteryCapacityLabel(capacity)}　${formatYen(variant?.price)}`;
+
+      capacitySelect.appendChild(option);
+    });
+
+  capacityField.classList.remove("hidden");
+  capacitySelect.disabled = false;
+
+  if (capacities.length === 1) {
+    capacitySelect.value = capacities[0];
+    handleBatteryCapacitySelection();
+  }
+}
+
+function handleBatteryCapacitySelection() {
+  const typeSelect =
+    document.getElementById("battery-type");
+  const capacitySelect =
+    document.getElementById("battery-capacity");
+  const button =
+    document.getElementById("repair-estimate-btn");
+  const detail =
+    document.getElementById("repair-detail");
+
+  selectedRepairItem = null;
+  button.disabled = true;
+  detail.classList.add("hidden");
+  document
+    .getElementById("result")
+    .replaceChildren();
+
+  if (
+    !typeSelect?.value ||
+    !capacitySelect?.value
+  ) {
+    return;
+  }
+
+  const item =
+    batteryRepairs.find(
+      candidate =>
+        getBatteryType(candidate) ===
+          typeSelect.value &&
+        getBatteryCapacity(candidate) ===
+          capacitySelect.value
+    );
+
+  if (!item) return;
+
+  selectedRepairItem = item;
+  renderRepairDetail(item);
+  button.disabled = false;
+}
+
+function renderRepairDetail(item) {
+  const detail =
+    document.getElementById("repair-detail");
+
+  detail.replaceChildren();
+
+  const name =
+    document.createElement("strong");
+
+  name.textContent =
+    item.name ||
+    item.category ||
+    "修理";
+
+  const price =
+    document.createElement("span");
+  price.textContent =
+    formatYen(item.price);
+
+  detail.append(name, price);
+
+  if (isBatteryRepair(item)) {
+    const type =
+      document.createElement("small");
+    type.textContent =
+      `種類：${getBatteryType(item)}`;
+    detail.appendChild(type);
+
+    const capacity =
+      document.createElement("small");
+    capacity.textContent =
+      `容量：${getBatteryCapacityLabel(
+        getBatteryCapacity(item)
+      )}`;
+    detail.appendChild(capacity);
+
+  } else if (item.quality) {
+    const quality =
+      document.createElement("small");
+    quality.textContent =
+      `品質：${item.quality}`;
+    detail.appendChild(quality);
+  }
+
+  if (item.note) {
+    const note =
+      document.createElement("small");
+    note.textContent = item.note;
+    detail.appendChild(note);
+  }
+
+  detail.classList.remove("hidden");
+}
+
 async function loadRepairs() {
-  const modelName = document.getElementById("model").value;
-  const repair = document.getElementById("repair_type");
-  const button = document.getElementById("repair-estimate-btn");
-  const detail = document.getElementById("repair-detail");
+  const modelName =
+    document.getElementById("model").value;
+  const repair =
+    document.getElementById("repair_type");
+  const button =
+    document.getElementById(
+      "repair-estimate-btn"
+    );
+  const detail =
+    document.getElementById(
+      "repair-detail"
+    );
 
   currentRepairs = [];
+  batteryRepairs = [];
+  selectedRepairItem = null;
+  resetBatterySelectors();
 
   repair.disabled = true;
   button.disabled = true;
 
   detail.classList.add("hidden");
-  document.getElementById("result").replaceChildren();
+  document
+    .getElementById("result")
+    .replaceChildren();
 
   if (!modelName) {
-    setSelectMessage(repair, "先に機種を選択してください");
+    setSelectMessage(
+      repair,
+      "先に機種を選択してください"
+    );
     return;
   }
 
-  setSelectMessage(repair, "修理メニューを読み込んでいます...");
+  setSelectMessage(
+    repair,
+    "修理メニューを読み込んでいます..."
+  );
 
   try {
     const response = await fetch(
@@ -250,7 +598,9 @@ async function loadRepairs() {
     );
 
     if (!response.ok) {
-      throw new Error("修理データを取得できませんでした");
+      throw new Error(
+        "修理データを取得できませんでした"
+      );
     }
 
     const data = await response.json();
@@ -261,35 +611,65 @@ async function loadRepairs() {
         ? data.repairs
         : [];
 
+    batteryRepairs =
+      currentRepairs.filter(isBatteryRepair);
+
     repair.replaceChildren();
 
-    const first = document.createElement("option");
+    const first =
+      document.createElement("option");
+
     first.value = "";
-    first.textContent = "修理内容を選択してください";
+    first.textContent =
+      "修理内容を選択してください";
+
     repair.appendChild(first);
 
-    currentRepairs.forEach((item, index) => {
-      const option = document.createElement("option");
+    let batteryAdded = false;
 
-      option.value = String(index);
+    currentRepairs.forEach(
+      (item, index) => {
+        if (isBatteryRepair(item)) {
+          if (batteryAdded) return;
 
-      const name =
-        item.name ||
-        item.category ||
-        item.part ||
-        "修理";
+          const option =
+            document.createElement("option");
 
-      const quality =
-        item.quality &&
-        item.quality !== "標準"
-          ? `｜${item.quality}`
-          : "";
+          option.value = "battery";
+          option.textContent =
+            "バッテリー交換";
 
-      option.textContent =
-        `${name}${quality}　${formatYen(item.price)}`;
+          repair.appendChild(option);
+          batteryAdded = true;
+          return;
+        }
 
-      repair.appendChild(option);
-    });
+        const option =
+          document.createElement("option");
+
+        option.value =
+          `item:${index}`;
+
+        const name =
+          item.name ||
+          item.category ||
+          item.part ||
+          "修理";
+
+        const quality =
+          item.quality &&
+          item.quality !== "標準"
+            ? `｜${item.quality}`
+            : "";
+
+        option.textContent =
+          `${name}${quality}　${formatYen(
+            item.price
+          )}`;
+
+        repair.appendChild(option);
+      }
+    );
 
     repair.disabled = false;
 
@@ -311,7 +691,8 @@ async function loadRepairs() {
     );
   }
 
-  repair.onchange = handleRepairSelection;
+  repair.onchange =
+    handleRepairSelection;
 }
 
 
@@ -320,54 +701,52 @@ async function loadRepairs() {
 ========================================== */
 
 function handleRepairSelection() {
-  const select = document.getElementById("repair_type");
-  const button = document.getElementById("repair-estimate-btn");
-  const detail = document.getElementById("repair-detail");
+  const select =
+    document.getElementById("repair_type");
+  const button =
+    document.getElementById(
+      "repair-estimate-btn"
+    );
+  const detail =
+    document.getElementById(
+      "repair-detail"
+    );
 
-  document.getElementById("result").replaceChildren();
+  selectedRepairItem = null;
+  resetBatterySelectors();
+
+  document
+    .getElementById("result")
+    .replaceChildren();
+
+  detail.classList.add("hidden");
+  button.disabled = true;
 
   if (select.value === "") {
-    button.disabled = true;
-    detail.classList.add("hidden");
     return;
   }
 
-  const item = currentRepairs[Number(select.value)];
-
-  if (!item) {
-    button.disabled = true;
-    detail.classList.add("hidden");
+  if (select.value === "battery") {
+    populateBatteryTypes();
     return;
   }
 
-  detail.replaceChildren();
-
-  const name = document.createElement("strong");
-
-  name.textContent =
-    item.name ||
-    item.category ||
-    "修理";
-
-  const price = document.createElement("span");
-  price.textContent = formatYen(item.price);
-
-  detail.append(name, price);
-
-  if (item.quality) {
-    const quality = document.createElement("small");
-    quality.textContent = `品質：${item.quality}`;
-    detail.appendChild(quality);
+  if (
+    !select.value.startsWith("item:")
+  ) {
+    return;
   }
 
-  if (item.note) {
-    const note = document.createElement("small");
-    note.textContent = item.note;
-    detail.appendChild(note);
-  }
+  const index =
+    Number(select.value.split(":")[1]);
 
+  const item =
+    currentRepairs[index];
 
-  detail.classList.remove("hidden");
+  if (!item) return;
+
+  selectedRepairItem = item;
+  renderRepairDetail(item);
   button.disabled = false;
 }
 
@@ -377,67 +756,107 @@ function handleRepairSelection() {
 ========================================== */
 
 function showRepairEstimate() {
-  const repairSelect = document.getElementById("repair_type");
+  const repairSelect =
+    document.getElementById(
+      "repair_type"
+    );
 
-  if (repairSelect.value === "") return;
+  if (
+    repairSelect.value === "" ||
+    !selectedRepairItem
+  ) {
+    return;
+  }
 
-  const item = currentRepairs[Number(repairSelect.value)];
-
-  if (!item) return;
+  const item =
+    selectedRepairItem;
 
   const modelName =
-    document.getElementById("model").value;
+    document.getElementById(
+      "model"
+    ).value;
 
   const travelCheck =
-    document.getElementById("repair-travel-check");
+    document.getElementById(
+      "repair-travel-check"
+    );
 
   const travelArea =
-    document.getElementById("repair-travel-area");
+    document.getElementById(
+      "repair-travel-area"
+    );
 
   let travelFee = 0;
 
   if (travelCheck.checked) {
     if (!travelArea.value) {
-      alert("出張地域を選択してください");
+      alert(
+        "出張地域を選択してください"
+      );
       return;
     }
 
     travelFee =
-      calculateTravelFee(travelArea.value);
+      calculateTravelFee(
+        travelArea.value
+      );
   }
 
   const repairPrice =
     Number(item.price) || 0;
 
-  // 大容量は別メニューとして販売価格に含まれているため、追加加算しない。
   const total =
     repairPrice +
     travelFee;
 
+  const repairRows = [
+    ["機種", modelName],
+    [
+      "修理内容",
+      item.name ||
+      item.category ||
+      "修理"
+    ]
+  ];
+
+  if (isBatteryRepair(item)) {
+    repairRows.push(
+      [
+        "バッテリー種類",
+        getBatteryType(item)
+      ],
+      [
+        "容量",
+        getBatteryCapacityLabel(
+          getBatteryCapacity(item)
+        )
+      ]
+    );
+  } else if (item.quality) {
+    repairRows.push(
+      ["品質", item.quality]
+    );
+  }
+
+  repairRows.push(
+    [
+      "修理料金",
+      formatYen(repairPrice)
+    ]
+  );
+
+  if (travelFee) {
+    repairRows.push(
+      [
+        "出張費",
+        formatYen(travelFee)
+      ]
+    );
+  }
+
   renderResult(
     "result",
-    [
-      ["機種", modelName],
-
-      [
-        "修理内容",
-        item.name ||
-        item.category ||
-        "修理"
-      ],
-
-      ...(item.quality
-        ? [["品質", item.quality]]
-        : []),
-
-      ["修理料金", formatYen(repairPrice)],
-
-
-      ...(travelFee
-        ? [["出張費", formatYen(travelFee)]]
-        : [])
-    ],
-
+    repairRows,
     total
   );
 }
