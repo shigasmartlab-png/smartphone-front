@@ -1088,6 +1088,7 @@ textarea {
   padding: 14px 16px;
   cursor: pointer;
   background: #fff;
+  color: #000;
 }
 
 .service-mode-option input {
