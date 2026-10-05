@@ -1755,16 +1755,14 @@ async function submitReservationInquiry(event) {
   message.textContent = "";
 
   try {
-    const response = await fetch(INQUIRY_API, {
+    await fetch(INQUIRY_API, {
       method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
       body: JSON.stringify(payload)
     });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || "submit error");
-    }
 
     message.textContent =
       "予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
