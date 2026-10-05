@@ -374,6 +374,98 @@
 
   </section>
 
+  <!-- =========================
+       予約・問い合わせ
+  ========================== -->
+  <section id="reservation-panel" class="reservation-panel hidden">
+
+    <div class="section-heading">
+      <span class="section-kicker">REQUEST</span>
+      <h2>予約・問い合わせ</h2>
+      <p>お見積もり内容を引き継いで、希望日時を3つ選択できます。</p>
+    </div>
+
+    <div id="reservation-summary" class="reservation-summary"></div>
+
+    <form id="reservation-form" class="form-card">
+      <div class="preference-grid">
+        <div class="preference-card" data-preference="1">
+          <strong>第1希望</strong>
+          <div class="field">
+            <label for="preferred-date-1">日付</label>
+            <input type="date" id="preferred-date-1" required>
+          </div>
+          <div class="field">
+            <label for="preferred-time-1">時間</label>
+            <select id="preferred-time-1" disabled required>
+              <option value="">先に日付を選択してください</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="preference-card" data-preference="2">
+          <strong>第2希望</strong>
+          <div class="field">
+            <label for="preferred-date-2">日付</label>
+            <input type="date" id="preferred-date-2" required>
+          </div>
+          <div class="field">
+            <label for="preferred-time-2">時間</label>
+            <select id="preferred-time-2" disabled required>
+              <option value="">先に日付を選択してください</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="preference-card" data-preference="3">
+          <strong>第3希望</strong>
+          <div class="field">
+            <label for="preferred-date-3">日付</label>
+            <input type="date" id="preferred-date-3" required>
+          </div>
+          <div class="field">
+            <label for="preferred-time-3">時間</label>
+            <select id="preferred-time-3" disabled required>
+              <option value="">先に日付を選択してください</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="request-name">お名前</label>
+        <input type="text" id="request-name" autocomplete="name" required>
+      </div>
+
+      <div class="field">
+        <label for="request-line">LINE表示名</label>
+        <input type="text" id="request-line" required>
+      </div>
+
+      <div class="field">
+        <label for="request-phone">電話番号（任意）</label>
+        <input type="tel" id="request-phone" autocomplete="tel">
+      </div>
+
+      <div class="field">
+        <label for="request-address">住所（出張希望の場合は必須）</label>
+        <input type="text" id="request-address" autocomplete="street-address">
+      </div>
+
+      <div class="field">
+        <label for="request-memo">備考（任意）</label>
+        <textarea id="request-memo" rows="4" placeholder="症状やご希望など"></textarea>
+      </div>
+
+      <p id="reservation-message" class="fine-print" aria-live="polite"></p>
+
+      <button id="reservation-submit" class="primary-btn" type="submit">
+        予約希望を送信
+      </button>
+    </form>
+
+  </section>
+
 </main>
 
 <!-- LINE -->
