@@ -1754,15 +1754,31 @@ async function submitReservationInquiry(event) {
   submitButton.textContent = "送信中...";
   message.textContent = "";
 
+  let dispatched = false;
+
   try {
-    await fetch(INQUIRY_API, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload)
-    });
+    if (navigator.sendBeacon) {
+      dispatched = navigator.sendBeacon(
+        INQUIRY_API,
+        JSON.stringify(payload)
+      );
+    }
+
+    if (!dispatched) {
+      fetch(INQUIRY_API, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(error => {
+        console.error("予約送信の応答確認に失敗しました", error);
+      });
+
+      dispatched = true;
+    }
 
     message.textContent =
       "予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
@@ -1782,7 +1798,7 @@ async function submitReservationInquiry(event) {
   } catch (error) {
     console.error(error);
     message.textContent =
-      "送信に失敗しました。時間をおいて再度お試しください。";
+      "送信処理を開始できませんでした。通信状態をご確認のうえ再度お試しください。";
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "予約希望を送信";
