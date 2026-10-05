@@ -1107,3 +1107,31 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* 予約送信結果 */
+#reservation-message {
+  margin: 14px 0 16px;
+}
+
+.reservation-message-success,
+.reservation-message-error {
+  display: block;
+  padding: 16px 18px;
+  border-radius: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.reservation-message-success {
+  background: #eafaf1;
+  border: 2px solid #2ecc71;
+  color: #0b3d22;
+  font-size: 1.05rem;
+}
+
+.reservation-message-error {
+  background: #fff1f1;
+  border: 2px solid #d9534f;
+  color: #7a1f1c;
+}
