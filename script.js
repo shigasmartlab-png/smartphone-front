@@ -11,7 +11,8 @@ const RESERVATION_AVAILABILITY_API =
   "https://script.google.com/macros/s/AKfycbxlIKZWy_OKCF-mL147Es-DkXyUvci8MAbpegWzyXxSyeokZuOG4MPZcxJr-7FE5p4n/exec";
 
 // 新しい受付用Apps Scriptをデプロイ後、このURLへ差し替えます。
-const INQUIRY_API = "";
+const INQUIRY_API =
+  "https://script.google.com/macros/s/AKfycbw_AdoFDzksHv620EXNS7WajjrmfpMR_DNgJDzgP05TYNyhE9OnOKn9V7_raV-CCmMjcw/exec";
 
 let currentOS = "iPhone";
 let currentRepairs = [];
