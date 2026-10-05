@@ -1059,3 +1059,50 @@ textarea {
     padding-right: 22px;
   }
 }
+
+
+/* 予約対応方法 */
+.service-mode-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 22px;
+}
+
+.service-mode-fieldset legend {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.service-mode-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.service-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d7d7d7;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.service-mode-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.service-mode-option:has(input:checked) {
+  border-color: currentColor;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .service-mode-options {
+    grid-template-columns: 1fr;
+  }
+}
