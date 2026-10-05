@@ -1364,17 +1364,13 @@ function renderReservationCta(targetId) {
 
 function setupReservationForm() {
   for (let i = 1; i <= 3; i++) {
-    const dateInput = document.getElementById(`preferred-date-${i}`);
-    if (!dateInput) continue;
+    const dateSelect = document.getElementById(`preferred-date-${i}`);
+    if (!dateSelect) continue;
 
-    const today = new Date();
-    const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 30);
-
-    dateInput.min = formatDateInput(today);
-    dateInput.max = formatDateInput(maxDate);
-    dateInput.addEventListener("change", () => loadPreferredTimes(i));
+    dateSelect.addEventListener("change", () => loadPreferredTimes(i));
   }
+
+  loadReservationAvailableDates();
 
   const form = document.getElementById("reservation-form");
   if (form) {
@@ -1387,6 +1383,76 @@ function formatDateInput(date) {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+async function loadReservationAvailableDates() {
+  const selects = [1, 2, 3]
+    .map(index => document.getElementById(`preferred-date-${index}`))
+    .filter(Boolean);
+
+  selects.forEach(select => {
+    setSelectMessage(select, "空き状況を読み込んでいます...");
+    select.disabled = true;
+  });
+
+  try {
+    const response = await fetch(
+      `${AVAILABILITY_API}?t=${Date.now()}`
+    );
+
+    if (!response.ok) {
+      throw new Error("available dates error");
+    }
+
+    const data = await response.json();
+
+    if (!data.success || !Array.isArray(data.availability)) {
+      throw new Error("available dates payload error");
+    }
+
+    const availableDates = data.availability
+      .filter(item => item && (item.status === "〇" || item.status === "△"))
+      .map(item => {
+        const parsed = parseApiDate(item.date);
+        if (!parsed) return null;
+
+        return {
+          value: formatDateInput(parsed),
+          label:
+            `${parsed.getMonth() + 1}/${parsed.getDate()}（${getWeekday(parsed)}） ${item.status}` +
+            (item.note ? ` ${item.note}` : "")
+        };
+      })
+      .filter(Boolean);
+
+    selects.forEach(select => {
+      select.replaceChildren();
+
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = availableDates.length
+        ? "空きのある日を選択してください"
+        : "現在選択できる日はありません";
+      select.appendChild(first);
+
+      availableDates.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item.value;
+        option.textContent = item.label;
+        select.appendChild(option);
+      });
+
+      select.disabled = availableDates.length === 0;
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    selects.forEach(select => {
+      setSelectMessage(select, "空き状況を取得できませんでした");
+      select.disabled = true;
+    });
+  }
 }
 
 function openReservationPanel() {
@@ -1562,7 +1628,13 @@ async function submitReservationInquiry(event) {
     event.currentTarget.reset();
 
     for (let i = 1; i <= 3; i++) {
+      const dateSelect = document.getElementById(`preferred-date-${i}`);
       const timeSelect = document.getElementById(`preferred-time-${i}`);
+
+      if (dateSelect) {
+        dateSelect.value = "";
+      }
+
       setSelectMessage(timeSelect, "先に日付を選択してください");
       timeSelect.disabled = true;
     }
