@@ -1354,7 +1354,7 @@ function renderError(
    空き状況データ共通キャッシュ
 ========================================== */
 
-function readAvailabilityCache() {
+function readAvailabilityCache({ allowStale = false } = {}) {
   if (availabilityMemoryCache) {
     return availabilityMemoryCache;
   }
@@ -1368,10 +1368,16 @@ function readAvailabilityCache() {
     if (
       !cached ||
       !Array.isArray(cached.availability) ||
-      !cached.savedAt ||
-      Date.now() - cached.savedAt > AVAILABILITY_CACHE_TTL
+      !cached.savedAt
     ) {
       localStorage.removeItem(AVAILABILITY_CACHE_KEY);
+      return null;
+    }
+
+    const expired =
+      Date.now() - cached.savedAt > AVAILABILITY_CACHE_TTL;
+
+    if (expired && !allowStale) {
       return null;
     }
 
@@ -1409,8 +1415,15 @@ async function getAvailabilityData({ force = false } = {}) {
     return availabilityRequestPromise;
   }
 
-  availabilityRequestPromise = fetch(AVAILABILITY_API)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+  availabilityRequestPromise = fetch(AVAILABILITY_API, {
+    signal: controller.signal
+  })
     .then(response => {
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error("空き状況を取得できませんでした");
       }
@@ -1423,6 +1436,16 @@ async function getAvailabilityData({ force = false } = {}) {
 
       writeAvailabilityCache(data.availability);
       return data.availability;
+    })
+    .catch(error => {
+      clearTimeout(timeoutId);
+
+      const stale = readAvailabilityCache({ allowStale: true });
+      if (stale) {
+        return stale;
+      }
+
+      throw error;
     })
     .finally(() => {
       availabilityRequestPromise = null;
@@ -1457,11 +1480,37 @@ function setupReservationForm() {
     dateSelect.addEventListener("change", () => loadPreferredTimes(i));
   }
 
+  document
+    .querySelectorAll('input[name="service-mode"]')
+    .forEach(radio => {
+      radio.addEventListener("change", updateServiceModeFields);
+    });
+
+  updateServiceModeFields();
   loadReservationAvailableDates();
 
   const form = document.getElementById("reservation-form");
   if (form) {
     form.addEventListener("submit", submitReservationInquiry);
+  }
+}
+
+function getSelectedServiceMode() {
+  return document.querySelector('input[name="service-mode"]:checked')?.value || "store";
+}
+
+function updateServiceModeFields() {
+  const isTravel = getSelectedServiceMode() === "travel";
+  const addressField = document.getElementById("request-address-field");
+  const addressInput = document.getElementById("request-address");
+
+  addressField?.classList.toggle("hidden", !isTravel);
+
+  if (addressInput) {
+    addressInput.required = isTravel;
+    if (!isTravel) {
+      addressInput.value = "";
+    }
   }
 }
 
@@ -1524,9 +1573,20 @@ async function loadReservationAvailableDates() {
     console.error(error);
 
     selects.forEach(select => {
-      setSelectMessage(select, "空き状況を取得できませんでした");
+      select.replaceChildren();
+
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = "日付一覧の取得に時間がかかっています";
+      select.appendChild(first);
       select.disabled = true;
     });
+
+    const message = document.getElementById("reservation-message");
+    if (message) {
+      message.textContent =
+        "空き日一覧の取得に時間がかかっています。ページを再読み込みすると改善する場合があります。";
+    }
   }
 }
 
@@ -1648,6 +1708,7 @@ async function submitReservationInquiry(event) {
     return;
   }
 
+  const serviceMode = getSelectedServiceMode();
   const name = document.getElementById("request-name").value.trim();
   const lineName = document.getElementById("request-line").value.trim();
   const phone = document.getElementById("request-phone").value.trim();
@@ -1659,8 +1720,8 @@ async function submitReservationInquiry(event) {
     return;
   }
 
-  if (lastEstimateContext.travel && !address) {
-    message.textContent = "出張希望の場合は住所を入力してください。";
+  if (serviceMode === "travel" && !address) {
+    message.textContent = "出張対応希望の場合は住所を入力してください。";
     return;
   }
 
@@ -1671,7 +1732,14 @@ async function submitReservationInquiry(event) {
 
   const payload = {
     action: "inquiry",
-    estimate: lastEstimateContext,
+    estimate: {
+      ...lastEstimateContext,
+      travel: serviceMode === "travel",
+      requestType:
+        serviceMode === "travel"
+          ? "出張対応希望"
+          : "店舗対応希望"
+    },
     customer: {
       name,
       lineName,
