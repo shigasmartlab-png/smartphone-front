@@ -20,6 +20,11 @@ let batteryRepairs = [];
 let selectedRepairItem = null;
 let lastEstimateContext = null;
 
+const AVAILABILITY_CACHE_KEY = "sslab_availability_cache_v1";
+const AVAILABILITY_CACHE_TTL = 10 * 60 * 1000;
+let availabilityMemoryCache = null;
+let availabilityRequestPromise = null;
+
 
 /* ==========================================
    出張設定
@@ -1346,6 +1351,88 @@ function renderError(
 
 
 /* ==========================================
+   空き状況データ共通キャッシュ
+========================================== */
+
+function readAvailabilityCache() {
+  if (availabilityMemoryCache) {
+    return availabilityMemoryCache;
+  }
+
+  try {
+    const raw = localStorage.getItem(AVAILABILITY_CACHE_KEY);
+    if (!raw) return null;
+
+    const cached = JSON.parse(raw);
+
+    if (
+      !cached ||
+      !Array.isArray(cached.availability) ||
+      !cached.savedAt ||
+      Date.now() - cached.savedAt > AVAILABILITY_CACHE_TTL
+    ) {
+      localStorage.removeItem(AVAILABILITY_CACHE_KEY);
+      return null;
+    }
+
+    availabilityMemoryCache = cached.availability;
+    return availabilityMemoryCache;
+  } catch (error) {
+    console.warn("空き状況キャッシュを読み込めませんでした", error);
+    return null;
+  }
+}
+
+function writeAvailabilityCache(items) {
+  availabilityMemoryCache = items;
+
+  try {
+    localStorage.setItem(
+      AVAILABILITY_CACHE_KEY,
+      JSON.stringify({
+        savedAt: Date.now(),
+        availability: items
+      })
+    );
+  } catch (error) {
+    console.warn("空き状況キャッシュを保存できませんでした", error);
+  }
+}
+
+async function getAvailabilityData({ force = false } = {}) {
+  if (!force) {
+    const cached = readAvailabilityCache();
+    if (cached) return cached;
+  }
+
+  if (availabilityRequestPromise) {
+    return availabilityRequestPromise;
+  }
+
+  availabilityRequestPromise = fetch(AVAILABILITY_API)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("空き状況を取得できませんでした");
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (!data.success || !Array.isArray(data.availability)) {
+        throw new Error("空き状況データが不正です");
+      }
+
+      writeAvailabilityCache(data.availability);
+      return data.availability;
+    })
+    .finally(() => {
+      availabilityRequestPromise = null;
+    });
+
+  return availabilityRequestPromise;
+}
+
+
+/* ==========================================
    予約・問い合わせ
 ========================================== */
 
@@ -1396,21 +1483,9 @@ async function loadReservationAvailableDates() {
   });
 
   try {
-    const response = await fetch(
-      `${AVAILABILITY_API}?t=${Date.now()}`
-    );
+    const availability = await getAvailabilityData();
 
-    if (!response.ok) {
-      throw new Error("available dates error");
-    }
-
-    const data = await response.json();
-
-    if (!data.success || !Array.isArray(data.availability)) {
-      throw new Error("available dates payload error");
-    }
-
-    const availableDates = data.availability
+    const availableDates = availability
       .filter(item => item && (item.status === "〇" || item.status === "△"))
       .map(item => {
         const parsed = parseApiDate(item.date);
@@ -1671,30 +1746,11 @@ async function loadAvailability() {
   wrapper.appendChild(loading);
 
   try {
-    const response = await fetch(
-      `${AVAILABILITY_API}?t=${Date.now()}`
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        "空き状況を取得できませんでした"
-      );
-    }
-
-    const data =
-      await response.json();
-
-    if (
-      !data.success ||
-      !Array.isArray(data.availability)
-    ) {
-      throw new Error(
-        "空き状況データが不正です"
-      );
-    }
+    const availability =
+      await getAvailabilityData();
 
     renderAvailability(
-      data.availability
+      availability
     );
 
   } catch (error) {
