@@ -356,6 +356,32 @@ select option {
   background: #fff;
 }
 
+.battery-description {
+  margin-top: 10px;
+  padding: 13px 14px;
+
+  border: 1px solid rgba(32,200,117,.18);
+  border-radius: var(--radius-small);
+
+  background: rgba(32,200,117,.07);
+}
+
+.battery-description strong {
+  display: block;
+  margin-bottom: 5px;
+
+  color: #e8f5ee;
+  font-size: .88rem;
+}
+
+.battery-description p {
+  margin: 0;
+
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.65;
+}
+
 /* ==========================================
    REPAIR DETAIL
 ========================================== */
