@@ -1493,6 +1493,14 @@ function setupReservationForm() {
   if (form) {
     form.addEventListener("submit", submitReservationInquiry);
   }
+
+  const clearButton = document.getElementById("reservation-clear");
+  if (clearButton) {
+    clearButton.addEventListener("click", () => {
+      resetAllSimulator();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 }
 
 function getSelectedServiceMode() {
@@ -1689,6 +1697,44 @@ function validatePreferredSlots(slots) {
   return "";
 }
 
+function resetAllSimulator() {
+  const reservationForm = document.getElementById("reservation-form");
+  reservationForm?.reset();
+
+  document
+    .querySelectorAll('input[name="service-mode"]')
+    .forEach(radio => {
+      radio.checked = false;
+    });
+
+  updateServiceModeFields();
+
+  for (let i = 1; i <= 3; i++) {
+    const dateSelect = document.getElementById(`preferred-date-${i}`);
+    const timeSelect = document.getElementById(`preferred-time-${i}`);
+
+    if (dateSelect) {
+      dateSelect.value = "";
+    }
+
+    if (timeSelect) {
+      setSelectMessage(timeSelect, "先に日付を選択してください");
+      timeSelect.disabled = true;
+    }
+  }
+
+  const reservationMessage = document.getElementById("reservation-message");
+  if (reservationMessage) {
+    reservationMessage.textContent = "";
+    reservationMessage.classList.remove(
+      "reservation-message-success",
+      "reservation-message-error"
+    );
+  }
+
+  resetEstimateSelections();
+}
+
 function resetEstimateSelections() {
   lastEstimateContext = null;
   selectedRepairItem = null;
@@ -1827,29 +1873,7 @@ async function submitReservationInquiry(event) {
       "✓ 予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
     message.classList.add("reservation-message-success");
 
-    event.currentTarget.reset();
-
-    document
-      .querySelectorAll('input[name="service-mode"]')
-      .forEach(radio => {
-        radio.checked = false;
-      });
-
-    updateServiceModeFields();
-
-    for (let i = 1; i <= 3; i++) {
-      const dateSelect = document.getElementById(`preferred-date-${i}`);
-      const timeSelect = document.getElementById(`preferred-time-${i}`);
-
-      if (dateSelect) {
-        dateSelect.value = "";
-      }
-
-      setSelectMessage(timeSelect, "先に日付を選択してください");
-      timeSelect.disabled = true;
-    }
-
-    resetEstimateSelections();
+    resetAllSimulator();
 
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
