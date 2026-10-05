@@ -89,32 +89,39 @@ document.addEventListener("DOMContentLoaded", () => {
    メインタブ
 ========================================== */
 
+function activateMainTab(tabName) {
+  const buttons = document.querySelectorAll(".main-tab");
+  const targetButton = [...buttons].find(button => button.dataset.tab === tabName);
+  const target = document.getElementById(`tab-${tabName}`);
+
+  if (!targetButton || !target) return;
+
+  buttons.forEach(btn => btn.classList.remove("active"));
+  document
+    .querySelectorAll(".tab-content")
+    .forEach(content => content.classList.remove("active"));
+
+  targetButton.classList.add("active");
+  target.classList.add("active");
+
+  if (tabName === "calendar") {
+    loadAvailability();
+  }
+}
+
 function setupMainTabs() {
   const buttons = document.querySelectorAll(".main-tab");
 
   buttons.forEach(button => {
     button.addEventListener("click", () => {
-      const tabName = button.dataset.tab;
-
-      buttons.forEach(btn => btn.classList.remove("active"));
-
-      document
-        .querySelectorAll(".tab-content")
-        .forEach(content => content.classList.remove("active"));
-
-      button.classList.add("active");
-
-      const target = document.getElementById(`tab-${tabName}`);
-
-      if (target) {
-        target.classList.add("active");
-      }
-
-      if (tabName === "calendar") {
-        loadAvailability();
-      }
+      activateMainTab(button.dataset.tab);
     });
   });
+
+  const requestedTab = new URLSearchParams(window.location.search).get("tab");
+  if (requestedTab) {
+    activateMainTab(requestedTab);
+  }
 }
 
 
