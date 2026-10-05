@@ -319,7 +319,11 @@ button {
 }
 
 select,
-input[type="number"] {
+input[type="number"],
+input[type="date"],
+input[type="text"],
+input[type="tel"],
+textarea {
   width: 100%;
   min-height: 50px;
 
@@ -339,7 +343,11 @@ input[type="number"] {
 }
 
 select:focus,
-input[type="number"]:focus {
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+textarea:focus {
   border-color: rgba(32,200,117,.7);
 
   box-shadow:
@@ -380,6 +388,68 @@ select option {
   color: var(--muted);
   font-size: .84rem;
   line-height: 1.65;
+}
+
+.reservation-cta {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.reservation-panel {
+  margin-top: 28px;
+  scroll-margin-top: 18px;
+}
+
+.reservation-summary {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid rgba(32,200,117,.18);
+  border-radius: var(--radius-small);
+  background: var(--green-soft);
+}
+
+.reservation-summary p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.reservation-summary-total {
+  color: var(--green) !important;
+  font-weight: 800;
+}
+
+.preference-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.preference-card {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: rgba(255,255,255,.018);
+}
+
+.preference-card > strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.preference-card .field + .field {
+  margin-top: 12px;
+}
+
+textarea {
+  min-height: 110px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+@media (min-width: 760px) {
+  .preference-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* ==========================================

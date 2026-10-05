@@ -7,10 +7,18 @@ const API_BASE = "https://estimate-api-6j8x.onrender.com";
 const AVAILABILITY_API =
   "https://script.google.com/macros/s/AKfycbxKAidOMkH2exn1zeUyIdueegpAdc50i3VSLnprFzKMiERJQWkoVXvQhx1n4pliVFF0/exec";
 
+const RESERVATION_AVAILABILITY_API =
+  "https://script.google.com/macros/s/AKfycbxlIKZWy_OKCF-mL147Es-DkXyUvci8MAbpegWzyXxSyeokZuOG4MPZcxJr-7FE5p4n/exec";
+
+// 新しい受付用Apps Scriptをデプロイ後、このURLへ差し替えます。
+const INQUIRY_API =
+  "https://script.google.com/macros/s/AKfycbw_AdoFDzksHv620EXNS7WajjrmfpMR_DNgJDzgP05TYNyhE9OnOKn9V7_raV-CCmMjcw/exec";
+
 let currentOS = "iPhone";
 let currentRepairs = [];
 let batteryRepairs = [];
 let selectedRepairItem = null;
+let lastEstimateContext = null;
 
 
 /* ==========================================
@@ -67,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTravelOptions();
   setupButtons();
   setupBatterySelectors();
+  setupReservationForm();
   loadModels();
 });
 
@@ -893,11 +902,27 @@ function showRepairEstimate() {
     );
   }
 
+  lastEstimateContext = {
+    requestType: "repair",
+    model: modelName,
+    service: item.name || item.category || "修理",
+    batteryType: isBatteryRepair(item) ? getBatteryType(item) : "",
+    capacity: isBatteryRepair(item)
+      ? getBatteryCapacityLabel(getBatteryCapacity(item))
+      : "",
+    coatingType: "",
+    total,
+    travel: travelCheck.checked,
+    travelArea: travelCheck.checked ? travelArea.value : ""
+  };
+
   renderResult(
     "result",
     repairRows,
     total
   );
+
+  renderReservationCta("result");
 }
 
 
@@ -1140,6 +1165,20 @@ async function calculateCoating(
     const total =
       coatingPrice + travelFee;
 
+    lastEstimateContext = {
+      requestType: "coating",
+      model: "",
+      service: kind === "glass"
+        ? "抗菌ガラスコーティング"
+        : "セラミックコーティング",
+      batteryType: "",
+      capacity: "",
+      coatingType: `${type === "double" ? "両面" : "片面"} / ${count}台 / ${person === "student" ? "学生" : person === "senior" ? "シニア" : "一般"}`,
+      total,
+      travel: Boolean(travelCheck?.checked),
+      travelArea: travelCheck?.checked ? travelArea?.value || "" : ""
+    };
+
     renderResult(
       resultId,
       [
@@ -1176,6 +1215,8 @@ async function calculateCoating(
 
       total
     );
+
+    renderReservationCta(resultId);
 
   } catch (error) {
     console.error(error);
@@ -1301,6 +1342,238 @@ function renderError(
   box.textContent = message;
 
   target.appendChild(box);
+}
+
+
+/* ==========================================
+   予約・問い合わせ
+========================================== */
+
+function renderReservationCta(targetId) {
+  const target = document.getElementById(targetId);
+  if (!target || !lastEstimateContext) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "secondary-btn reservation-cta";
+  button.textContent = "この内容で予約・問い合わせ";
+
+  button.addEventListener("click", openReservationPanel);
+  target.appendChild(button);
+}
+
+function setupReservationForm() {
+  for (let i = 1; i <= 3; i++) {
+    const dateInput = document.getElementById(`preferred-date-${i}`);
+    if (!dateInput) continue;
+
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 30);
+
+    dateInput.min = formatDateInput(today);
+    dateInput.max = formatDateInput(maxDate);
+    dateInput.addEventListener("change", () => loadPreferredTimes(i));
+  }
+
+  const form = document.getElementById("reservation-form");
+  if (form) {
+    form.addEventListener("submit", submitReservationInquiry);
+  }
+}
+
+function formatDateInput(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function openReservationPanel() {
+  if (!lastEstimateContext) return;
+
+  const panel = document.getElementById("reservation-panel");
+  const summary = document.getElementById("reservation-summary");
+
+  summary.replaceChildren();
+
+  const title = document.createElement("strong");
+  title.textContent = "現在のお見積もり";
+
+  const service = document.createElement("p");
+  const model = lastEstimateContext.model
+    ? `${lastEstimateContext.model} / `
+    : "";
+  service.textContent = `${model}${lastEstimateContext.service}`;
+
+  const total = document.createElement("p");
+  total.className = "reservation-summary-total";
+  total.textContent = `見積金額：${formatYen(lastEstimateContext.total)}`;
+
+  summary.append(title, service, total);
+
+  panel.classList.remove("hidden");
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function loadPreferredTimes(index) {
+  const dateInput = document.getElementById(`preferred-date-${index}`);
+  const timeSelect = document.getElementById(`preferred-time-${index}`);
+
+  if (!dateInput?.value || !timeSelect) return;
+
+  setSelectMessage(timeSelect, "空き時間を読み込んでいます...");
+  timeSelect.disabled = true;
+
+  try {
+    const response = await fetch(
+      `${RESERVATION_AVAILABILITY_API}?action=availability&date=${encodeURIComponent(dateInput.value)}&duration=60`
+    );
+
+    if (!response.ok) {
+      throw new Error("availability error");
+    }
+
+    const data = await response.json();
+    const slots = Array.isArray(data.slots) ? data.slots : [];
+
+    timeSelect.replaceChildren();
+
+    const first = document.createElement("option");
+    first.value = "";
+    first.textContent = "時間を選択してください";
+    timeSelect.appendChild(first);
+
+    slots
+      .filter(slot => slot && slot.available)
+      .forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot.time;
+        option.textContent = slot.time;
+        timeSelect.appendChild(option);
+      });
+
+    if (timeSelect.options.length === 1) {
+      first.textContent = "この日に選択できる時間はありません";
+      timeSelect.disabled = true;
+      return;
+    }
+
+    timeSelect.disabled = false;
+  } catch (error) {
+    console.error(error);
+    setSelectMessage(timeSelect, "空き時間を取得できませんでした");
+    timeSelect.disabled = true;
+  }
+}
+
+function getPreferredSlots() {
+  return [1, 2, 3].map(index => ({
+    date: document.getElementById(`preferred-date-${index}`)?.value || "",
+    time: document.getElementById(`preferred-time-${index}`)?.value || ""
+  }));
+}
+
+function validatePreferredSlots(slots) {
+  if (slots.some(slot => !slot.date || !slot.time)) {
+    return "第1〜第3希望をすべて選択してください。";
+  }
+
+  const unique = new Set(slots.map(slot => `${slot.date} ${slot.time}`));
+
+  if (unique.size !== slots.length) {
+    return "同じ日時を複数の希望に指定することはできません。";
+  }
+
+  return "";
+}
+
+async function submitReservationInquiry(event) {
+  event.preventDefault();
+
+  const message = document.getElementById("reservation-message");
+  const submitButton = document.getElementById("reservation-submit");
+
+  if (!lastEstimateContext) {
+    message.textContent = "先にお見積もりを表示してください。";
+    return;
+  }
+
+  const slots = getPreferredSlots();
+  const slotError = validatePreferredSlots(slots);
+
+  if (slotError) {
+    message.textContent = slotError;
+    return;
+  }
+
+  const name = document.getElementById("request-name").value.trim();
+  const lineName = document.getElementById("request-line").value.trim();
+  const phone = document.getElementById("request-phone").value.trim();
+  const address = document.getElementById("request-address").value.trim();
+  const memo = document.getElementById("request-memo").value.trim();
+
+  if (!name || !lineName) {
+    message.textContent = "お名前とLINE表示名を入力してください。";
+    return;
+  }
+
+  if (lastEstimateContext.travel && !address) {
+    message.textContent = "出張希望の場合は住所を入力してください。";
+    return;
+  }
+
+  if (!INQUIRY_API) {
+    message.textContent = "受付APIの接続準備中です。";
+    return;
+  }
+
+  const payload = {
+    action: "inquiry",
+    estimate: lastEstimateContext,
+    customer: {
+      name,
+      lineName,
+      phone,
+      address,
+      memo
+    },
+    preferences: slots
+  };
+
+  submitButton.disabled = true;
+  submitButton.textContent = "送信中...";
+  message.textContent = "";
+
+  try {
+    const response = await fetch(INQUIRY_API, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "submit error");
+    }
+
+    message.textContent =
+      "予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
+    event.currentTarget.reset();
+
+    for (let i = 1; i <= 3; i++) {
+      const timeSelect = document.getElementById(`preferred-time-${i}`);
+      setSelectMessage(timeSelect, "先に日付を選択してください");
+      timeSelect.disabled = true;
+    }
+  } catch (error) {
+    console.error(error);
+    message.textContent =
+      "送信に失敗しました。時間をおいて再度お試しください。";
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "予約希望を送信";
+  }
 }
 
 
