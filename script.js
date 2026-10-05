@@ -1689,6 +1689,59 @@ function validatePreferredSlots(slots) {
   return "";
 }
 
+function resetEstimateSelections() {
+  lastEstimateContext = null;
+  selectedRepairItem = null;
+
+  const idsToReset = [
+    "model",
+    "repair_type",
+    "battery-type",
+    "battery-capacity",
+    "glass-count",
+    "glass-side",
+    "glass-discount",
+    "ceramic-count",
+    "ceramic-side",
+    "ceramic-discount"
+  ];
+
+  idsToReset.forEach(id => {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    if (element.tagName === "SELECT") {
+      element.selectedIndex = 0;
+      element.dispatchEvent(new Event("change"));
+      return;
+    }
+
+    if (element.type === "checkbox" || element.type === "radio") {
+      element.checked = false;
+      element.dispatchEvent(new Event("change"));
+      return;
+    }
+
+    element.value = "";
+  });
+
+  document
+    .querySelectorAll(
+      'input[name="travel"], input[name="travel-option"], input[name="coating-tab"]'
+    )
+    .forEach(input => {
+      input.checked = false;
+    });
+
+  const result = document.getElementById("result");
+  const coatingResult = document.getElementById("coating-result");
+  const reservationPanel = document.getElementById("reservation-panel");
+
+  result?.replaceChildren();
+  coatingResult?.replaceChildren();
+  reservationPanel?.classList.add("hidden");
+}
+
 async function submitReservationInquiry(event) {
   event.preventDefault();
 
@@ -1773,8 +1826,16 @@ async function submitReservationInquiry(event) {
     message.textContent =
       "✓ 予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
     message.classList.add("reservation-message-success");
-    message.scrollIntoView({ behavior: "smooth", block: "center" });
+
     event.currentTarget.reset();
+
+    document
+      .querySelectorAll('input[name="service-mode"]')
+      .forEach(radio => {
+        radio.checked = false;
+      });
+
+    updateServiceModeFields();
 
     for (let i = 1; i <= 3; i++) {
       const dateSelect = document.getElementById(`preferred-date-${i}`);
@@ -1787,6 +1848,12 @@ async function submitReservationInquiry(event) {
       setSelectMessage(timeSelect, "先に日付を選択してください");
       timeSelect.disabled = true;
     }
+
+    resetEstimateSelections();
+
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 500);
   } catch (error) {
     console.error(error);
     message.textContent =
