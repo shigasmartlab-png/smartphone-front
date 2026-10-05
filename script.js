@@ -1695,6 +1695,11 @@ async function submitReservationInquiry(event) {
   const message = document.getElementById("reservation-message");
   const submitButton = document.getElementById("reservation-submit");
 
+  message.classList.remove(
+    "reservation-message-success",
+    "reservation-message-error"
+  );
+
   if (!lastEstimateContext) {
     message.textContent = "先にお見積もりを表示してください。";
     return;
@@ -1766,7 +1771,9 @@ async function submitReservationInquiry(event) {
     });
 
     message.textContent =
-      "予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
+      "✓ 予約希望を受け付けました。内容を確認後、LINE等でご連絡します。";
+    message.classList.add("reservation-message-success");
+    message.scrollIntoView({ behavior: "smooth", block: "center" });
     event.currentTarget.reset();
 
     for (let i = 1; i <= 3; i++) {
@@ -1784,6 +1791,7 @@ async function submitReservationInquiry(event) {
     console.error(error);
     message.textContent =
       "送信できませんでした。通信状態をご確認のうえ再度お試しください。";
+    message.classList.add("reservation-message-error");
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "予約希望を送信";
