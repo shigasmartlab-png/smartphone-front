@@ -261,6 +261,42 @@ function getBatteryCapacityLabel(capacity) {
     : "標準容量";
 }
 
+function getBatteryTypeDescription(type) {
+  const descriptions = {
+    "通常":
+      "価格を抑えたい方向けの標準タイプです。普段使いにおすすめです。",
+    "高品質":
+      "セル品質や安定性を重視したタイプです。長く使いたい方や、品質を重視したい方におすすめです。",
+    "TIチップ搭載":
+      "TIチップを搭載した高品質タイプです。交換後のバッテリー情報表示にも配慮した設計です。機種やiOSの仕様により、「バッテリーに関する重要なメッセージ」や「未確認」などの表示が残る場合があります。"
+  };
+
+  return descriptions[type] ||
+    "バッテリーの種類によって、価格・仕様・特徴が異なります。";
+}
+
+function updateBatteryTypeDescription(type = "") {
+  const description =
+    document.getElementById("battery-type-description");
+
+  if (!description) return;
+
+  if (!type) {
+    description.replaceChildren();
+    description.classList.add("hidden");
+    return;
+  }
+
+  const title = document.createElement("strong");
+  title.textContent = "このバッテリーについて";
+
+  const text = document.createElement("p");
+  text.textContent = getBatteryTypeDescription(type);
+
+  description.replaceChildren(title, text);
+  description.classList.remove("hidden");
+}
+
 function setupBatterySelectors() {
   const typeSelect =
     document.getElementById("battery-type");
@@ -295,6 +331,8 @@ function resetBatterySelectors() {
   if (typeField) {
     typeField.classList.add("hidden");
   }
+
+  updateBatteryTypeDescription();
 
   if (capacityField) {
     capacityField.classList.add("hidden");
@@ -387,6 +425,7 @@ function handleBatteryTypeSelection() {
   selectedRepairItem = null;
   button.disabled = true;
   detail.classList.add("hidden");
+  updateBatteryTypeDescription(typeSelect?.value || "");
   document
     .getElementById("result")
     .replaceChildren();
