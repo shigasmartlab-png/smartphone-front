@@ -388,6 +388,20 @@
     <div id="reservation-summary" class="reservation-summary"></div>
 
     <form id="reservation-form" class="form-card">
+      <fieldset class="service-mode-fieldset">
+        <legend>対応方法</legend>
+        <div class="service-mode-options">
+          <label class="service-mode-option">
+            <input type="radio" name="service-mode" value="store" checked>
+            <span>店舗対応希望</span>
+          </label>
+          <label class="service-mode-option">
+            <input type="radio" name="service-mode" value="travel">
+            <span>出張対応希望</span>
+          </label>
+        </div>
+      </fieldset>
+
       <div class="preference-grid">
         <div class="preference-card" data-preference="1">
           <strong>第1希望</strong>
@@ -453,8 +467,8 @@
         <input type="tel" id="request-phone" autocomplete="tel">
       </div>
 
-      <div class="field">
-        <label for="request-address">住所（出張希望の場合は必須）</label>
+      <div class="field hidden" id="request-address-field">
+        <label for="request-address">出張先住所</label>
         <input type="text" id="request-address" autocomplete="street-address">
       </div>
 
